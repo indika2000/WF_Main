@@ -28,15 +28,31 @@ WF_Main/
 │   ├── tailwind.config.js     # NativeWind / Tailwind theme
 │   └── .env                   # Firebase keys (EXPO_PUBLIC_FIREBASE_*)
 └── services/                  # Backend services (Docker)
-    ├── docker-compose.yml     # Base: MongoDB 7, Redis 7, gateway, permissions
+    ├── docker-compose.yml     # Base: MongoDB 7, Redis 7, gateway, all services
     ├── docker-compose.dev.yml # Dev overrides: hot-reload, host ports, volume mounts
     ├── .env / .env.example    # Environment config (gitignored / template)
     ├── shared/python/         # Shared Python utils (auth, config, responses, middleware)
     ├── node-gateway/          # Express API Gateway (:3000)
     │   ├── src/               # server, app, config/, middleware/, routes/, utils/
     │   └── tests/             # Jest + supertest
-    └── permissions-service/   # FastAPI Permissions & Entitlements (:5003)
-        ├── app/               # main, config, database, models/, routes/, services/
+    ├── permissions-service/   # FastAPI Permissions & Entitlements (:5003)
+    │   ├── app/               # main, config, database, models/, routes/, services/
+    │   └── tests/             # pytest + httpx + mongomock-motor
+    ├── llm-service/           # FastAPI Multi-Provider AI Service (:5000)
+    │   ├── app/               # main, config, database
+    │   │   ├── providers/     # base (Protocol), anthropic, openai, gemini, factory
+    │   │   ├── models/        # conversations, generation, providers
+    │   │   ├── services/      # generation_service, chat_service, provider_service
+    │   │   └── routes/        # health, generate, chat, providers
+    │   ├── config/            # providers.yml (provider models, fallback chains)
+    │   └── tests/             # pytest + httpx + mongomock-motor
+    └── image-service/         # FastAPI Image Upload & Processing (:5001)
+        ├── app/               # main, config, database
+        │   ├── storage/       # base (Protocol), local (filesystem)
+        │   ├── processing/    # image_processor (Pillow variants)
+        │   ├── models/        # images (records, presets, variants)
+        │   ├── services/      # image_service, generation_proxy
+        │   └── routes/        # health, images, user_images, generate
         └── tests/             # pytest + httpx + mongomock-motor
 ```
 
@@ -53,6 +69,9 @@ WF_Main/
 ## Tech Stack — Backend
 - **Gateway:** Node.js 20 + Express, Firebase Admin SDK, jsonwebtoken (HS256), http-proxy-middleware
 - **Python Services:** Python 3.12 + FastAPI, motor (async MongoDB), Pydantic v2, PyJWT
+- **LLM Providers:** anthropic SDK (Claude), openai SDK (GPT-4o, DALL-E 3), google-genai SDK (Gemini, Imagen)
+- **Image Processing:** Pillow (resize variants), aiofiles (async storage), python-magic (MIME validation)
+- **Streaming:** sse-starlette (EventSourceResponse for SSE text streaming)
 - **Databases:** MongoDB 7.0 (primary store), Redis 7 Alpine (cache, rate limiting)
 - **Containerization:** Docker + docker-compose (dev uses volume mounts + hot-reload)
 - **Testing:** Jest + supertest (Node), pytest + httpx + mongomock-motor (Python)
@@ -96,7 +115,7 @@ Card front artwork files follow the naming pattern: `card-front-{rarity}.png`
 
 ## Development — Backend
 - Start all services: `cd services && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
-- Dev ports: Gateway 3000, Permissions 5003, MongoDB 27017, Redis 6379
+- Dev ports: Gateway 3000, LLM 5000, Image 5001, Permissions 5003, MongoDB 27017, Redis 6379
 - Dev bypass auth: `Authorization: Bearer dev-bypass` (skips Firebase in non-production)
 - Hot-reload: gateway uses nodemon (watches src/), Python services use `uvicorn --reload`
 - Note: On Windows/Docker, nodemon may not detect volume-mounted file changes — restart the container with `docker-compose restart gateway` if needed
@@ -119,3 +138,8 @@ Card front artwork files follow the naming pattern: `card-front-{rarity}.png`
 - **Gateway proxy path prefix:** Express strips the router mount prefix, so `http-proxy-middleware` receives only the sub-path. Use `config.pathPrefix` in the `proxyReq` handler to prepend the backend route prefix (see `services.js` and `proxy.js`)
 - **Gateway Dockerfile:** Uses `npm install` (not `npm ci`) since no package-lock.json is committed
 - **.dockerignore files:** Exist at `services/` (for Python service builds) and `services/node-gateway/` (for gateway builds) — keep these updated when adding new services
+- **google-genai SDK:** `types.Part.from_text()` requires keyword arg: `Part.from_text(text="...")`, not positional. Model names may deprecate — `gemini-2.0-flash` was retired, use `gemini-2.5-flash` or later
+- **Provider factory pattern:** Providers are Protocol-based (structural subtyping), instantiated only when API keys are present. The factory supports primary/fallback chains — if primary fails, falls back automatically. Config lives in `llm-service/config/providers.yml`
+- **Gateway proxy for multi-route services:** If a service has no common route prefix (LLM has `/generate/*`, `/providers/*`, `/health`), set `pathPrefix: ''`. For sub-paths like `/chat/*`, add a separate SERVICE_CONFIG entry with its own `pathPrefix`
+- **docker-compose env reload:** `docker-compose restart` does NOT reload `.env` changes — use `docker-compose up -d <service>` to recreate the container with new env vars
+- **Image service storage:** Uses `StorageBackend` Protocol with `LocalStorage` impl. Docker volume `image_storage` persists data at `/storage`. Storage is extensible to S3 by implementing the protocol
