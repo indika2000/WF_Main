@@ -1,0 +1,30 @@
+providers:
+  text:
+    primary: anthropic
+    fallback: openai
+    providers:
+      anthropic:
+        model: claude-sonnet-4-20250514
+        max_tokens: 4096
+        timeout: 30
+      openai:
+        model: gpt-4o
+        max_tokens: 4096
+        timeout: 30
+      gemini:
+        model: gemini-2.5-flash
+        max_tokens: 4096
+        timeout: 30
+
+  image:
+    primary: gemini
+    fallback: openai
+    providers:
+      gemini:
+        model: imagen-3.0-generate-002
+        timeout: 60
+      openai:
+        model: dall-e-3
+        timeout: 60
+        size: "1024x1024"
+        quality: standard

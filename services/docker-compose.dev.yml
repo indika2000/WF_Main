@@ -1,0 +1,44 @@
+# Development overrides — hot-reload, port mapping, volume mounts
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  mongodb:
+    ports:
+      - "27017:27017"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  gateway:
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./node-gateway/src:/app/src
+    command: npx nodemon src/server.js
+
+  permissions:
+    ports:
+      - "5003:5003"
+    volumes:
+      - ./permissions-service/app:/app/app
+      - ./shared:/app/shared
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5003 --reload
+
+  llm-service:
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./llm-service/app:/app/app
+      - ./llm-service/config:/app/config
+      - ./shared:/app/shared
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload
+
+  image-service:
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./image-service/app:/app/app
+      - ./shared:/app/shared
+      - image_storage:/storage
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5001 --reload

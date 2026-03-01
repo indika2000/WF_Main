@@ -1,0 +1,139 @@
+services:
+  # ===== Infrastructure =====
+  mongodb:
+    image: mongo:7.0
+    container_name: wf-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-changeme}
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wf-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: wf-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wf-network
+
+  # ===== Application Services =====
+  gateway:
+    build:
+      context: ./node-gateway
+      dockerfile: Dockerfile
+    container_name: wf-gateway
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY: ${JWT_EXPIRY:-1h}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      PERMISSIONS_SERVICE_URL: http://permissions:5003
+      COMMERCE_SERVICE_URL: http://commerce:3004
+      IMAGE_SERVICE_URL: http://image-service:5001
+      LLM_SERVICE_URL: http://llm-service:5000
+      REDIS_URL: redis://redis:6379
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8081,http://localhost:19006}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      permissions:
+        condition: service_started
+    networks:
+      - wf-network
+
+  permissions:
+    build:
+      context: .
+      dockerfile: permissions-service/Dockerfile
+    container_name: wf-permissions
+    environment:
+      SERVICE_NAME: permissions
+      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme}@mongodb:27017/wildernessfriends?authSource=admin
+      REDIS_URL: redis://redis:6379
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 5003
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - wf-network
+
+  # ===== LLM Service =====
+  llm-service:
+    build:
+      context: .
+      dockerfile: llm-service/Dockerfile
+    container_name: wf-llm
+    environment:
+      SERVICE_NAME: llm
+      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme}@mongodb:27017/wildernessfriends?authSource=admin
+      REDIS_URL: redis://redis:6379
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 5000
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      LLM_CONFIG_PATH: /app/config/providers.yml
+      LLM_DEFAULT_TEXT_PROVIDER: ${LLM_DEFAULT_TEXT_PROVIDER:-anthropic}
+      LLM_DEFAULT_IMAGE_PROVIDER: ${LLM_DEFAULT_IMAGE_PROVIDER:-gemini}
+      PERMISSIONS_SERVICE_URL: http://permissions:5003
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - wf-network
+
+  # ===== Image Service =====
+  image-service:
+    build:
+      context: .
+      dockerfile: image-service/Dockerfile
+    container_name: wf-image
+    environment:
+      SERVICE_NAME: image
+      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme}@mongodb:27017/wildernessfriends?authSource=admin
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 5001
+      IMAGE_STORAGE_PATH: /storage
+      IMAGE_MAX_FILE_SIZE: ${IMAGE_MAX_FILE_SIZE:-10485760}
+      LLM_SERVICE_URL: http://llm-service:5000
+      PERMISSIONS_SERVICE_URL: http://permissions:5003
+    volumes:
+      - image_storage:/storage
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - wf-network
+
+networks:
+  wf-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:
+  image_storage:
