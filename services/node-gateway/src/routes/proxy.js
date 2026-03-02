@@ -1,5 +1,5 @@
 const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createProxyMiddleware, fixRequestBody } = require('http-proxy-middleware');
 const { SERVICE_CONFIG } = require('../config/services');
 const { authMiddleware } = require('../middleware/auth');
 const { permissionsMiddleware } = require('../middleware/permissions');
@@ -13,6 +13,9 @@ const router = express.Router();
  *
  * Express strips the router mount prefix, so req.url = /{id}/...
  * We prepend config.pathPrefix to restore the backend route.
+ *
+ * fixRequestBody re-serializes req.body onto the proxy request when
+ * express.json() has already consumed the body stream.
  */
 function createServiceProxy(serviceName, config) {
   return createProxyMiddleware({
@@ -20,7 +23,7 @@ function createServiceProxy(serviceName, config) {
     changeOrigin: true,
     timeout: config.timeout,
     on: {
-      proxyReq: (proxyReq, req) => {
+      proxyReq: (proxyReq, req, res) => {
         // Prepend the backend path prefix (Express strips the mount path)
         if (config.pathPrefix) {
           proxyReq.path = config.pathPrefix + proxyReq.path;
@@ -32,6 +35,8 @@ function createServiceProxy(serviceName, config) {
         if (process.env.INTERNAL_API_KEY) {
           proxyReq.setHeader('X-Api-Key', process.env.INTERNAL_API_KEY);
         }
+        // Re-attach body consumed by express.json()
+        fixRequestBody(proxyReq, req, res);
       },
       error: (err, req, res) => {
         console.error(`[GATEWAY] Proxy error for ${serviceName}:`, err.message);
@@ -56,13 +61,25 @@ router.use(
   createServiceProxy('permissions', SERVICE_CONFIG.permissions)
 );
 
-// Commerce Service proxy (Phase 3 — placeholder)
-// router.use(
-//   '/commerce',
-//   authMiddleware,
-//   permissionsMiddleware,
-//   createServiceProxy('commerce', SERVICE_CONFIG.commerce)
-// );
+// Commerce Service proxy — conditionally skips auth for webhook paths
+// (Stripe calls webhooks directly without JWT auth)
+router.use(
+  '/commerce',
+  (req, res, next) => {
+    if (req.path.startsWith('/webhooks')) {
+      return next('route');
+    }
+    authMiddleware(req, res, next);
+  },
+  permissionsMiddleware,
+  createServiceProxy('commerce', SERVICE_CONFIG.commerce)
+);
+
+// Commerce webhook fallback — no auth, uses same proxy
+router.use(
+  '/commerce',
+  createServiceProxy('commerce', SERVICE_CONFIG.commerce)
+);
 
 // Image Service proxy (Phase 2 — active)
 router.use(

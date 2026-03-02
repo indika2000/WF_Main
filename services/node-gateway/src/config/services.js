@@ -7,7 +7,7 @@ const SERVICE_CONFIG = {
   commerce: {
     url: process.env.COMMERCE_SERVICE_URL || 'http://commerce:3004',
     timeout: 30000,
-    pathPrefix: '/commerce',
+    pathPrefix: '',  // Commerce routes are /cart/*, /checkout/*, etc. — no common prefix
   },
   images: {
     url: process.env.IMAGE_SERVICE_URL || 'http://image-service:5001',

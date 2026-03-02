@@ -42,3 +42,11 @@ services:
       - ./shared:/app/shared
       - image_storage:/storage
     command: uvicorn app.main:app --host 0.0.0.0 --port 5001 --reload
+
+  commerce:
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./commerce-service/app:/app/app
+      - ./shared:/app/shared
+    command: uvicorn app.main:app --host 0.0.0.0 --port 3004 --reload

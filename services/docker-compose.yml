@@ -129,6 +129,32 @@ services:
     networks:
       - wf-network
 
+  # ===== Commerce Service =====
+  commerce:
+    build:
+      context: .
+      dockerfile: commerce-service/Dockerfile
+    container_name: wf-commerce
+    environment:
+      SERVICE_NAME: commerce
+      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme}@mongodb:27017/wildernessfriends?authSource=admin
+      REDIS_URL: redis://redis:6379
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 3004
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_PREMIUM: ${STRIPE_PRICE_PREMIUM:-}
+      STRIPE_PRICE_ULTRA: ${STRIPE_PRICE_ULTRA:-}
+      PERMISSIONS_SERVICE_URL: http://permissions:5003
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wf-network
+
 networks:
   wf-network:
     driver: bridge
