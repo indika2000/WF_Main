@@ -1,4 +1,5 @@
 const { auth } = require('../config/firebase');
+const { verifyToken } = require('../utils/jwt');
 const { errorResponse } = require('../utils/responses');
 
 /**
@@ -10,12 +11,15 @@ const PUBLIC_PATHS = [
 ];
 
 /**
- * Firebase token verification middleware.
+ * Authentication middleware.
  *
- * - Extracts Bearer token from Authorization header
- * - Verifies via Firebase Admin SDK
- * - Attaches user info to req.user
- * - Supports dev-bypass in non-production environments
+ * Accepts either:
+ * 1. Internal JWT (from /api/auth/token exchange) — verified locally via HS256
+ * 2. Firebase ID token — verified via Firebase Admin SDK
+ * 3. "dev-bypass" token — in non-production environments
+ *
+ * Internal JWTs are tried first since they're the common path for SDK
+ * requests after the initial token exchange.
  */
 async function authMiddleware(req, res, next) {
   // Skip auth for public paths
@@ -39,6 +43,23 @@ async function authMiddleware(req, res, next) {
     return next();
   }
 
+  // Try internal JWT first (most common path for SDK requests)
+  try {
+    const decoded = verifyToken(token);
+    req.user = {
+      uid: decoded.uid,
+      email: decoded.email || '',
+    };
+    // Pass through the already-valid internal token — skip permissions refetch
+    req.internalToken = token;
+    req.permissions = decoded.permissions || {};
+    req.subscription = { tier: decoded.subscription_tier || 'free' };
+    return next();
+  } catch (_) {
+    // Not an internal JWT — fall through to Firebase verification
+  }
+
+  // Fall back to Firebase ID token verification
   try {
     const decodedToken = await auth.verifyIdToken(token);
     req.user = {

@@ -53,9 +53,10 @@ async def test_db():
 @pytest.fixture
 async def test_redis():
     """Provide a clean test Redis for each test."""
-    r = fakeredis.aioredis.FakeRedis(decode_responses=True)
+    server = fakeredis.FakeServer()
+    r = fakeredis.aioredis.FakeRedis(decode_responses=True, server=server)
     yield r
-    await r.aclose()
+    await r.close()
 
 
 @pytest.fixture

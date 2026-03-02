@@ -21,6 +21,11 @@ async function permissionsMiddleware(req, res, next) {
     return next();
   }
 
+  // Skip if auth middleware already verified an internal JWT
+  if (req.internalToken) {
+    return next();
+  }
+
   const { uid, email } = req.user;
   const headers = { 'X-Api-Key': INTERNAL_API_KEY };
 

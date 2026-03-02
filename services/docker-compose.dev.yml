@@ -15,6 +15,7 @@ services:
       - "3000:3000"
     volumes:
       - ./node-gateway/src:/app/src
+      - ./node-gateway/tests:/app/tests
     command: npx nodemon src/server.js
 
   permissions:
@@ -22,7 +23,9 @@ services:
       - "5003:5003"
     volumes:
       - ./permissions-service/app:/app/app
+      - ./permissions-service/tests:/app/tests
       - ./shared:/app/shared
+      - ./pytest.ini:/app/pytest.ini
     command: uvicorn app.main:app --host 0.0.0.0 --port 5003 --reload
 
   llm-service:
@@ -31,7 +34,9 @@ services:
     volumes:
       - ./llm-service/app:/app/app
       - ./llm-service/config:/app/config
+      - ./llm-service/tests:/app/tests
       - ./shared:/app/shared
+      - ./pytest.ini:/app/pytest.ini
     command: uvicorn app.main:app --host 0.0.0.0 --port 5000 --reload
 
   image-service:
@@ -39,7 +44,9 @@ services:
       - "5001:5001"
     volumes:
       - ./image-service/app:/app/app
+      - ./image-service/tests:/app/tests
       - ./shared:/app/shared
+      - ./pytest.ini:/app/pytest.ini
       - image_storage:/storage
     command: uvicorn app.main:app --host 0.0.0.0 --port 5001 --reload
 
@@ -48,5 +55,7 @@ services:
       - "3004:3004"
     volumes:
       - ./commerce-service/app:/app/app
+      - ./commerce-service/tests:/app/tests
       - ./shared:/app/shared
+      - ./pytest.ini:/app/pytest.ini
     command: uvicorn app.main:app --host 0.0.0.0 --port 3004 --reload

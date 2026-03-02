@@ -23,6 +23,16 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="dev-tools"
+        options={{
+          title: "Dev Tools",
+          href: __DEV__ ? "/dev-tools" : null,
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="construct-outline" size={28} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

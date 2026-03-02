@@ -75,30 +75,56 @@ Request
 
 ## 5. Service Proxy Configuration
 
+> **Implementation note:** The actual implementation uses `pathPrefix` (prepended in the `proxyReq` handler) instead of `pathRewrite`. Express strips the router mount prefix, so the proxy receives only the sub-path. The `pathPrefix` restores the backend route prefix. See `services/node-gateway/src/config/services.js`.
+
 ```javascript
 const SERVICE_CONFIG = {
   permissions: {
     url: process.env.PERMISSIONS_SERVICE_URL || 'http://permissions:5003',
     timeout: 10000,
-    pathRewrite: { '^/api/permissions': '' },
+    pathPrefix: '/permissions',
   },
   commerce: {
     url: process.env.COMMERCE_SERVICE_URL || 'http://commerce:3004',
-    timeout: 30000,  // Longer for Stripe operations
-    pathRewrite: { '^/api/commerce': '' },
+    timeout: 30000,
+    pathPrefix: '',  // Commerce routes are /cart/*, /checkout/*, etc. — no common prefix
   },
   images: {
     url: process.env.IMAGE_SERVICE_URL || 'http://image-service:5001',
-    timeout: 60000,  // Longer for uploads
-    pathRewrite: { '^/api/images': '' },
+    timeout: 60000,
+    pathPrefix: '/images',
   },
   llm: {
     url: process.env.LLM_SERVICE_URL || 'http://llm-service:5000',
-    timeout: 120000, // Longest — AI generation can be slow
-    pathRewrite: { '^/api/(llm|chat)': '' },
+    timeout: 120000,
+    pathPrefix: '',  // LLM routes are /generate/*, /providers/* — no common prefix
+  },
+  chat: {
+    url: process.env.LLM_SERVICE_URL || 'http://llm-service:5000',
+    timeout: 120000,
+    pathPrefix: '/chat',  // Chat routes are /chat/* on the LLM service
   },
 };
 ```
+
+### 5.1 Commerce Webhook Auth Bypass
+
+Commerce webhooks (called by Stripe directly) bypass JWT auth. The gateway proxy uses `next('route')` to skip auth for `/webhooks` paths, falling through to an unauthenticated proxy:
+
+```javascript
+// Authenticated commerce routes
+router.use('/commerce', (req, res, next) => {
+  if (req.path.startsWith('/webhooks')) return next('route');
+  authMiddleware(req, res, next);
+}, permissionsMiddleware, createServiceProxy('commerce', SERVICE_CONFIG.commerce));
+
+// Unauthenticated fallback (webhooks only reach here)
+router.use('/commerce', createServiceProxy('commerce', SERVICE_CONFIG.commerce));
+```
+
+### 5.2 fixRequestBody for POST Proxying
+
+`express.json()` consumes the body stream before the proxy can forward it. All proxy routes call `fixRequestBody(proxyReq, req, res)` in the `proxyReq` handler to re-serialize `req.body` onto the proxy request.
 
 ## 6. JWT Token Structure
 

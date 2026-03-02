@@ -1,0 +1,53 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env from example
+        run: cp services/.env.example services/.env
+
+      - name: Build and start services
+        working-directory: services
+        run: |
+          docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+          echo "Waiting for services to be healthy..."
+          # Wait for MongoDB and Redis health checks
+          for i in {1..30}; do
+            if docker-compose exec -T mongodb mongosh --eval "db.runCommand({ping:1})" --quiet 2>/dev/null; then
+              echo "MongoDB is ready"
+              break
+            fi
+            echo "Waiting for MongoDB... ($i/30)"
+            sleep 2
+          done
+          # Brief pause for all services to initialize
+          sleep 10
+
+      - name: Run Python service tests
+        working-directory: services
+        run: |
+          for svc in permissions llm-service image-service commerce; do
+            echo "=== Testing $svc ==="
+            docker-compose exec -T $svc pytest tests/ -v --tb=short
+          done
+
+      - name: Run Gateway tests
+        working-directory: services
+        run: docker-compose exec -T gateway npm test
+
+      - name: Teardown
+        if: always()
+        working-directory: services
+        run: docker-compose down -v

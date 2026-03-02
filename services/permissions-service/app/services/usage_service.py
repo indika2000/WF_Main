@@ -70,6 +70,10 @@ async def check_usage(
 
     # Check if period has expired — reset counter
     period_end = doc.get("period_end")
+    if period_end:
+        # Ensure timezone-aware comparison (mongomock may return naive datetimes)
+        if period_end.tzinfo is None:
+            period_end = period_end.replace(tzinfo=timezone.utc)
     if period_end and now > period_end:
         new_start = now
         new_end = now + timedelta(days=30)

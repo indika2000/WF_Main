@@ -78,3 +78,8 @@ app.include_router(subscriptions.router, tags=["Subscriptions"])
 app.include_router(orders.router, tags=["Orders"])
 app.include_router(profile.router, tags=["Profile"])
 app.include_router(webhooks.router, tags=["Webhooks"])
+
+# Dev tools — only in development mode
+if settings.debug:
+    from app.routes import dev
+    app.include_router(dev.router, tags=["Dev Tools"])

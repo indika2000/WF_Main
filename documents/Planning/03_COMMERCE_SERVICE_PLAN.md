@@ -1,5 +1,7 @@
 # Commerce Service - Planning Document
 
+> **Status: IMPLEMENTED** — Phase 3 complete. 35 new files + 5 infrastructure updates. All endpoints operational, cart CRUD verified, webhook auth bypass working through gateway. Stripe keys are placeholders — replace with real test-mode keys in `services/.env` before testing payments.
+
 ## 1. Purpose
 
 A generic commerce service handling all monetary transactions through Stripe. It manages:

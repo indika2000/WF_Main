@@ -7,6 +7,7 @@ os.environ["JWT_SECRET"] = "test-jwt-secret-for-testing"
 os.environ["SERVICE_NAME"] = "llm-test"
 os.environ["LLM_CONFIG_PATH"] = "/nonexistent/providers.yml"
 
+import asyncio
 import jwt as pyjwt
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -49,6 +50,16 @@ class MockImageProvider:
                 "size": size,
             }
         ]
+
+
+@pytest.fixture(autouse=True)
+def reset_sse_app_status():
+    """Reset sse_starlette's AppStatus event to avoid event-loop binding issues."""
+    try:
+        from sse_starlette.sse import AppStatus
+        AppStatus.should_exit_event = asyncio.Event()
+    except (ImportError, AttributeError):
+        pass
 
 
 @pytest.fixture

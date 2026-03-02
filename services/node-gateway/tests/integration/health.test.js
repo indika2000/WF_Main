@@ -44,6 +44,7 @@ describe('GET /health/services', () => {
 
     nock('http://llm-service:5000')
       .get('/health')
+      .times(2)  // llm + chat both hit the same URL
       .reply(200, { data: { status: 'ok' } });
 
     const res = await request(app)

@@ -45,7 +45,7 @@ async def create_subscription(
             current_period_start=data.current_period_start,
             current_period_end=data.current_period_end,
         )
-        doc = sub.model_dump()
+        doc = sub.model_dump(exclude_none=True)
         await db.subscriptions.insert_one(doc)
         result = doc
 

@@ -3,7 +3,7 @@
 import json
 
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
 @pytest.mark.asyncio
@@ -19,7 +19,7 @@ class TestGenerateRoutes:
             _create_minimal_png()
         ).decode("utf-8")
 
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "success": True,
@@ -60,7 +60,7 @@ class TestGenerateRoutes:
         """Test that generation request accepts optional parameters."""
         # This will fail at the httpx call level, but validates request parsing
         with patch("app.services.generation_proxy.httpx.AsyncClient") as mock_cls:
-            mock_resp = AsyncMock()
+            mock_resp = MagicMock()
             mock_resp.status_code = 500
             mock_resp.text = "Service unavailable"
 

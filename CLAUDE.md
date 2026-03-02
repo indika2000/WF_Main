@@ -17,12 +17,24 @@ WF_Main/
 │   │   ├── scanner.tsx        # Camera barcode/QR scanner (VisionCamera)
 │   │   ├── globals.css        # Tailwind CSS entry
 │   │   └── (tabs)/            # Authenticated tab navigator
-│   │       ├── _layout.tsx    # Tab bar config
-│   │       └── index.tsx      # Home screen - card display, scan results
+│   │       ├── _layout.tsx    # Tab bar config (includes Dev Tools tab in __DEV__)
+│   │       ├── index.tsx      # Home screen - card display, scan results
+│   │       └── dev-tools.tsx  # Dev Tools screen (__DEV__ only): cart, payment, webhook testing
 │   ├── components/            # FlipCard, CardShimmer, ScanResultDisplay, VideoBackground
 │   ├── config/firebase.ts     # Firebase init with AsyncStorage persistence
-│   ├── context/AuthContext.tsx # Firebase auth context provider
-│   ├── types/index.ts         # Shared TypeScript types
+│   ├── context/AuthContext.tsx # Auth context: Firebase + JWT token exchange, permissions
+│   ├── services/              # API SDK layer (axios-based)
+│   │   ├── api.ts             # Axios instance with JWT interceptors + response unwrapping
+│   │   ├── tokenManager.ts    # Firebase→Gateway JWT exchange, caching, auto-refresh
+│   │   ├── permissions.ts     # Permissions service SDK
+│   │   ├── cart.ts            # Cart operations SDK
+│   │   ├── commerce.ts        # Checkout, subscriptions, orders, profile SDK
+│   │   ├── images.ts          # Image upload, fetch, generate SDK
+│   │   ├── llm.ts             # Text/image generation, providers SDK
+│   │   ├── chat.ts            # Conversation management SDK
+│   │   └── devTools.ts        # Dev-only: webhook simulation, event listing
+│   ├── hooks/useApi.ts        # useApi (auto-fetch) + useMutation (on-demand) hooks
+│   ├── types/index.ts         # Shared TypeScript types (API responses, models)
 │   ├── assets/                # images/card_designs/, videos/
 │   ├── app.config.js          # Expo config
 │   ├── tailwind.config.js     # NativeWind / Tailwind theme
@@ -31,6 +43,8 @@ WF_Main/
     ├── docker-compose.yml     # Base: MongoDB 7, Redis 7, gateway, all services
     ├── docker-compose.dev.yml # Dev overrides: hot-reload, host ports, volume mounts
     ├── .env / .env.example    # Environment config (gitignored / template)
+    ├── run-tests.sh           # Unified test runner (--unit, --coverage, --service <name>)
+    ├── pytest.ini             # Shared pytest config (asyncio_mode=auto)
     ├── shared/python/         # Shared Python utils (auth, config, responses, middleware)
     ├── node-gateway/          # Express API Gateway (:3000)
     │   ├── src/               # server, app, config/, middleware/, routes/, utils/
@@ -46,14 +60,20 @@ WF_Main/
     │   │   └── routes/        # health, generate, chat, providers
     │   ├── config/            # providers.yml (provider models, fallback chains)
     │   └── tests/             # pytest + httpx + mongomock-motor
-    └── image-service/         # FastAPI Image Upload & Processing (:5001)
-        ├── app/               # main, config, database
-        │   ├── storage/       # base (Protocol), local (filesystem)
-        │   ├── processing/    # image_processor (Pillow variants)
-        │   ├── models/        # images (records, presets, variants)
-        │   ├── services/      # image_service, generation_proxy
-        │   └── routes/        # health, images, user_images, generate
-        └── tests/             # pytest + httpx + mongomock-motor
+    ├── image-service/         # FastAPI Image Upload & Processing (:5001)
+    │   ├── app/               # main, config, database
+    │   │   ├── storage/       # base (Protocol), local (filesystem)
+    │   │   ├── processing/    # image_processor (Pillow variants)
+    │   │   ├── models/        # images (records, presets, variants)
+    │   │   ├── services/      # image_service, generation_proxy
+    │   │   └── routes/        # health, images, user_images, generate
+    │   └── tests/             # pytest + httpx + mongomock-motor
+    └── commerce-service/      # FastAPI Stripe Commerce (:3004)
+        ├── app/               # main, config, database (MongoDB + Redis)
+        │   ├── models/        # profile, cart, orders (+ subscription records)
+        │   ├── services/      # cart, checkout, subscription, webhook
+        │   └── routes/        # health, cart, checkout, subscriptions, orders, profile, webhooks
+        └── tests/             # pytest + httpx + mongomock-motor + fakeredis
 ```
 
 ## Tech Stack — Mobile
@@ -63,6 +83,7 @@ WF_Main/
 - **Animations:** React Native Reanimated v3
 - **Auth:** Firebase Auth (email/password) with AsyncStorage persistence
 - **Camera/Scanner:** React Native Vision Camera v4
+- **HTTP Client:** Axios with JWT interceptors (auto-inject token, unwrap responses, 401 retry)
 - **State:** React Context (AuthContext), AsyncStorage for scan result passing
 - **TypeScript:** Yes, throughout
 
@@ -70,11 +91,12 @@ WF_Main/
 - **Gateway:** Node.js 20 + Express, Firebase Admin SDK, jsonwebtoken (HS256), http-proxy-middleware
 - **Python Services:** Python 3.12 + FastAPI, motor (async MongoDB), Pydantic v2, PyJWT
 - **LLM Providers:** anthropic SDK (Claude), openai SDK (GPT-4o, DALL-E 3), google-genai SDK (Gemini, Imagen)
+- **Commerce:** stripe SDK (PaymentIntents, Subscriptions, Webhooks), Redis-backed cart (7-day TTL)
 - **Image Processing:** Pillow (resize variants), aiofiles (async storage), python-magic (MIME validation)
 - **Streaming:** sse-starlette (EventSourceResponse for SSE text streaming)
 - **Databases:** MongoDB 7.0 (primary store), Redis 7 Alpine (cache, rate limiting)
 - **Containerization:** Docker + docker-compose (dev uses volume mounts + hot-reload)
-- **Testing:** Jest + supertest (Node), pytest + httpx + mongomock-motor (Python)
+- **Testing:** Jest + supertest (Node), pytest + httpx + mongomock-motor + fakeredis (Python)
 - **Shared Python utils:** Imported as `from shared.python.auth import ...` (PYTHONPATH=/app)
 
 ## Design System
@@ -115,7 +137,7 @@ Card front artwork files follow the naming pattern: `card-front-{rarity}.png`
 
 ## Development — Backend
 - Start all services: `cd services && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
-- Dev ports: Gateway 3000, LLM 5000, Image 5001, Permissions 5003, MongoDB 27017, Redis 6379
+- Dev ports: Gateway 3000, LLM 5000, Image 5001, Permissions 5003, Commerce 3004, MongoDB 27017, Redis 6379
 - Dev bypass auth: `Authorization: Bearer dev-bypass` (skips Firebase in non-production)
 - Hot-reload: gateway uses nodemon (watches src/), Python services use `uvicorn --reload`
 - Note: On Windows/Docker, nodemon may not detect volume-mounted file changes — restart the container with `docker-compose restart gateway` if needed
@@ -143,3 +165,14 @@ Card front artwork files follow the naming pattern: `card-front-{rarity}.png`
 - **Gateway proxy for multi-route services:** If a service has no common route prefix (LLM has `/generate/*`, `/providers/*`, `/health`), set `pathPrefix: ''`. For sub-paths like `/chat/*`, add a separate SERVICE_CONFIG entry with its own `pathPrefix`
 - **docker-compose env reload:** `docker-compose restart` does NOT reload `.env` changes — use `docker-compose up -d <service>` to recreate the container with new env vars
 - **Image service storage:** Uses `StorageBackend` Protocol with `LocalStorage` impl. Docker volume `image_storage` persists data at `/storage`. Storage is extensible to S3 by implementing the protocol
+- **Commerce Service — dual database:** First service using both MongoDB (orders, profiles, subscriptions) and Redis (ephemeral carts with 7-day TTL). Redis connection set up alongside MongoDB in lifespan
+- **Commerce pathPrefix:** Commerce routes are at root level (`/cart/*`, `/checkout/*`, `/orders/*`, `/webhooks/*`) — `pathPrefix: ''` in gateway services.js, same pattern as LLM
+- **Stripe webhook auth bypass:** Gateway uses `next('route')` pattern on `/commerce` — if `req.path.startsWith('/webhooks')`, skips auth middleware and falls through to an unauthenticated proxy. Stripe signature verification replaces JWT auth in the webhook route
+- **fixRequestBody for proxy POST requests:** `express.json()` consumes the request body stream before the proxy can forward it. Must call `fixRequestBody(proxyReq, req, res)` from `http-proxy-middleware` in the `proxyReq` handler — this re-serializes `req.body` onto the proxy request. Applied globally to all proxy routes
+- **Stripe webhook raw body:** The webhook route reads `await request.body()` directly — no Pydantic body model (would parse JSON and lose raw bytes needed for signature verification)
+- **Server-side pricing:** `_recalculate_totals()` always recomputes cart totals from item prices. Client-provided totals are never trusted
+- **FakeRedis for tests:** `fakeredis[json]` provides an in-process async Redis mock. No test Redis container needed. Combined with mongomock-motor for dual-database test fixtures
+- **Unified test runner:** `services/run-tests.sh` runs all backend tests in Docker. Flags: `--unit`, `--integration`, `--coverage`, `--service <name>`. CI runs via `.github/workflows/test.yml` on push/PR to main
+- **Mobile SDK pattern:** All service SDKs (`services/*.ts`) use the shared Axios instance from `api.ts`. Response data is auto-unwrapped from the `{success, data, message}` envelope — SDK functions return the inner `data` directly
+- **Token exchange flow:** Firebase ID token → `POST /api/auth/token` → gateway JWT (HS256). Token cached in memory with 60s pre-expiry refresh. `AuthContext.apiReady` is `true` once JWT is obtained
+- **Dev tools guard:** `dev.py` route + `dev-tools.tsx` tab are both conditional on dev mode (`settings.debug` for Python, `__DEV__` for React Native). Dev webhook simulation calls `handle_event()` directly, bypassing Stripe signature verification

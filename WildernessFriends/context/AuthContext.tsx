@@ -7,20 +7,31 @@ import {
   User as FirebaseUser,
 } from "firebase/auth";
 import { auth } from "../config/firebase";
+import * as tokenManager from "../services/tokenManager";
 
 interface User {
   uid: string;
   email: string | null;
 }
 
+interface UserPermissions {
+  role: string;
+  is_premium: boolean;
+  permissions: Record<string, boolean>;
+  subscription: { tier: string; status: string };
+}
+
 type AuthContextType = {
   user: User | null;
   loading: boolean;
   error: string | null;
+  apiReady: boolean;
+  permissions: UserPermissions | null;
   setError: (error: string | null) => void;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshToken: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -33,18 +44,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [apiReady, setApiReady] = useState(false);
+  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
+
+  const exchangeAndSetToken = async () => {
+    try {
+      const data = await tokenManager.exchangeToken();
+      setPermissions({
+        role: data.user.role,
+        is_premium: data.user.is_premium,
+        permissions: data.user.permissions,
+        subscription: data.user.subscription,
+      });
+      setApiReady(true);
+    } catch (err) {
+      console.warn("[Auth] Token exchange failed:", err);
+      setApiReady(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser: FirebaseUser | null) => {
+      async (firebaseUser: FirebaseUser | null) => {
         if (firebaseUser) {
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
           });
+          // Exchange Firebase token for internal JWT
+          await exchangeAndSetToken();
         } else {
           setUser(null);
+          setApiReady(false);
+          setPermissions(null);
+          tokenManager.clearToken();
         }
         setLoading(false);
       }
@@ -84,6 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = async () => {
     try {
       setLoading(true);
+      tokenManager.clearToken();
+      setApiReady(false);
+      setPermissions(null);
       await signOut(auth);
     } catch (err: any) {
       setError(err.message || "Logout failed");
@@ -92,9 +129,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const refreshToken = async () => {
+    await exchangeAndSetToken();
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, setError, login, register, logout }}
+      value={{
+        user,
+        loading,
+        error,
+        apiReady,
+        permissions,
+        setError,
+        login,
+        register,
+        logout,
+        refreshToken,
+      }}
     >
       {children}
     </AuthContext.Provider>
