@@ -9,12 +9,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../context/AuthContext";
-import * as cartService from "../../services/cart";
-import * as commerce from "../../services/commerce";
-import * as permissionsService from "../../services/permissions";
-import * as devTools from "../../services/devTools";
-import type { Cart, Order, Subscription, UserPermissions } from "../../types";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../../context/AuthContext";
+import * as cartService from "../../../services/cart";
+import * as commerce from "../../../services/commerce";
+import * as permissionsService from "../../../services/permissions";
+import * as devTools from "../../../services/devTools";
+import type { Cart, Order, Subscription, UserPermissions } from "../../../types";
 
 const WEBHOOK_EVENTS = [
   "payment_intent.succeeded",
@@ -28,8 +29,9 @@ const WEBHOOK_EVENTS = [
 
 type ResultData = Cart | Order[] | Subscription | UserPermissions | null;
 
-export default function DevToolsScreen() {
+export default function DevToolsLandingScreen() {
   const { user, apiReady, permissions } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState(0);
@@ -65,6 +67,43 @@ export default function DevToolsScreen() {
         <Text className="text-text-muted text-xs mb-4">
           {apiReady ? "API Connected" : "API Not Connected"} | {user?.email}
         </Text>
+
+        {/* --- Navigation Cards --- */}
+        <View className="flex-row flex-wrap gap-3 mb-4">
+          <TouchableOpacity
+            className="bg-secondary rounded-xl p-4 items-center"
+            style={{ width: "47%" }}
+            activeOpacity={0.7}
+            onPress={() => router.push("/(dev-tools)/scan-test")}
+          >
+            <Ionicons name="scan-outline" size={28} color="#8BB174" />
+            <Text className="text-text-secondary text-xs font-semibold mt-2 text-center">
+              Scan & Card Test
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="bg-secondary rounded-xl p-4 items-center"
+            style={{ width: "47%" }}
+            activeOpacity={0.7}
+            onPress={() => router.push("/(dev-tools)/card-layer-test")}
+          >
+            <Ionicons name="layers-outline" size={28} color="#8BB174" />
+            <Text className="text-text-secondary text-xs font-semibold mt-2 text-center">
+              Card Layer Test
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="bg-secondary rounded-xl p-4 items-center"
+            style={{ width: "47%" }}
+            activeOpacity={0.7}
+            onPress={() => router.push("/(dev-tools)/character-gen-test")}
+          >
+            <Ionicons name="paw-outline" size={28} color="#8BB174" />
+            <Text className="text-text-secondary text-xs font-semibold mt-2 text-center">
+              Character Generator
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* --- Cart Tester --- */}
         <SectionHeader title="Cart" icon="cart-outline" />
