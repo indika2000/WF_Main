@@ -59,3 +59,14 @@ services:
       - ./shared:/app/shared
       - ./pytest.ini:/app/pytest.ini
     command: uvicorn app.main:app --host 0.0.0.0 --port 3004 --reload
+
+  character:
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./character-service/app:/app/app
+      - ./character-service/config:/app/config
+      - ./character-service/tests:/app/tests
+      - ./shared:/app/shared
+      - ./pytest.ini:/app/pytest.ini
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5002 --reload

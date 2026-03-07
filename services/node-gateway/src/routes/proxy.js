@@ -105,4 +105,12 @@ router.use(
   createServiceProxy('chat', SERVICE_CONFIG.chat)
 );
 
+// Character Service proxy (Phase 5 — active)
+router.use(
+  '/characters',
+  authMiddleware,
+  permissionsMiddleware,
+  createServiceProxy('characters', SERVICE_CONFIG.characters)
+);
+
 module.exports = router;

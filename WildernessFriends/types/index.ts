@@ -245,3 +245,95 @@ export interface Conversation {
   created_at: string;
   updated_at: string;
 }
+
+// ===== Characters =====
+
+export interface CreatureIdentity {
+  creature_id: string;
+  creature_signature: string;
+}
+
+export interface CreatureSource {
+  canonical_id: string;
+  code_type: string;
+  raw_value: string;
+}
+
+export interface CreatureClassification {
+  rarity: string;
+  biome: string;
+  family: string;
+  species: string;
+  sub_type: string;
+  element: string;
+  temperament: string;
+  size: string;
+  variant: string;
+}
+
+export interface CreaturePresentation {
+  name: string;
+  title: string;
+  primary_color: string;
+  secondary_color: string;
+  sigil: string;
+  frame_style: string;
+}
+
+export interface CreatureAttributes {
+  power: number;
+  defense: number;
+  agility: number;
+  wisdom: number;
+  ferocity: number;
+  magic: number;
+  luck: number;
+}
+
+export interface CreatureCard {
+  identity: CreatureIdentity;
+  source: CreatureSource;
+  classification: CreatureClassification;
+  presentation: CreaturePresentation;
+  attributes: CreatureAttributes;
+  season: string;
+  image_id?: string;
+  claimed_by?: string;
+  claimed_at?: string;
+  status: string;
+  generation_iteration: number;
+  downgraded_from?: string;
+  created_at: string;
+}
+
+export interface GenerateCreatureResponse {
+  creature: CreatureCard;
+  is_owner: boolean;
+  is_new_discovery: boolean;
+  is_claimed_variant: boolean;
+}
+
+export interface SupplyTier {
+  rarity: string;
+  current_count: number;
+  max_count: number | null;
+  remaining: number | null;
+}
+
+export interface SupplyStatus {
+  season: string;
+  tiers: SupplyTier[];
+}
+
+export interface CollectionResponse {
+  items: Array<{
+    user_id: string;
+    creature_id: string;
+    obtained_at: string;
+    obtained_via: string;
+    creature?: CreatureCard;
+  }>;
+  total: number;
+  skip: number;
+  limit: number;
+}

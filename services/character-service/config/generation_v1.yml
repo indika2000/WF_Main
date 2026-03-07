@@ -1,0 +1,1656 @@
+version: "v1"
+namespace: "WILDERNESS_FRIENDS"
+
+# =============================================================================
+# RARITY SYSTEM
+# =============================================================================
+
+# Rarity weights — byte[0] % 100 maps to these ranges
+rarity_weights:
+  COMMON:    { min: 0, max: 69 }
+  UNCOMMON:  { min: 70, max: 89 }
+  RARE:      { min: 90, max: 96 }
+  EPIC:      { min: 97, max: 98 }
+  LEGENDARY: { min: 99, max: 99 }
+
+# Per-season supply caps (null = unlimited)
+supply_caps:
+  COMMON:    null
+  UNCOMMON:  100000
+  RARE:      25000
+  EPIC:      5000
+  LEGENDARY: 500
+
+# Collision policy per rarity
+collision_policy:
+  COMMON:    ALLOW
+  UNCOMMON:  ALLOW
+  RARE:      ALLOW_IF_STATS_DIFFER
+  EPIC:      REROLL_ON_SIGNATURE_MATCH
+  LEGENDARY: REROLL_ON_ANY_ARCHETYPE_MATCH
+
+max_reroll_attempts: 10
+
+# Stat ranges per rarity — byte[14-20] used for stats
+stat_ranges:
+  COMMON:    { min: 10, max: 40 }
+  UNCOMMON:  { min: 25, max: 55 }
+  RARE:      { min: 40, max: 70 }
+  EPIC:      { min: 55, max: 85 }
+  LEGENDARY: { min: 70, max: 100 }
+
+stat_names:
+  - power
+  - defense
+  - agility
+  - wisdom
+  - ferocity
+  - magic
+  - luck
+
+# =============================================================================
+# BIOMES (~45)
+# =============================================================================
+
+biomes:
+  - FOREST
+  - DEEP_FOREST
+  - ENCHANTED_FOREST
+  - ANCIENT_FOREST
+  - BAMBOO_FOREST
+  - SWAMP
+  - MANGROVE_SWAMP
+  - BOG
+  - MOUNTAIN
+  - HIGH_PEAK
+  - VOLCANIC_MOUNTAIN
+  - SNOWLAND
+  - GLACIER
+  - FROZEN_TUNDRA
+  - ICE_CAVE
+  - DESERT
+  - SAND_DUNE
+  - OASIS
+  - BADLANDS
+  - OCEAN
+  - DEEP_OCEAN
+  - CORAL_REEF
+  - RIVER
+  - LAKE
+  - WATERFALL
+  - CAVE
+  - CRYSTAL_CAVE
+  - UNDERGROUND
+  - GRASSLAND
+  - SAVANNA
+  - STEPPE
+  - JUNGLE
+  - RAINFOREST
+  - CANOPY
+  - VOLCANO
+  - LAVA_FIELD
+  - ISLAND
+  - COAST
+  - CLIFF
+  - RUINS
+  - CEMETERY
+  - VOID
+  - SKY_REALM
+  - CLOUD_PEAKS
+  - MUSHROOM_GROVE
+
+# =============================================================================
+# SPECIES (~70 creatures — mix of fantasy + wildlife)
+# Each species belongs to a family
+# =============================================================================
+
+species:
+  # Humanoid family
+  - { id: ELF, family: HUMANOID }
+  - { id: DWARF, family: HUMANOID }
+  - { id: ORC, family: HUMANOID }
+  - { id: GOBLIN, family: HUMANOID }
+  - { id: TROLL, family: HUMANOID }
+  - { id: FAIRY, family: HUMANOID }
+  - { id: GNOME, family: HUMANOID }
+  - { id: NYMPH, family: HUMANOID }
+  - { id: MERFOLK, family: HUMANOID }
+  - { id: CENTAUR, family: HUMANOID }
+  # Nature spirit family
+  - { id: DRYAD, family: NATURE_SPIRIT }
+  - { id: SPRIGGAN, family: NATURE_SPIRIT }
+  - { id: TREANT, family: NATURE_SPIRIT }
+  - { id: WISP, family: NATURE_SPIRIT }
+  - { id: SYLPH, family: NATURE_SPIRIT }
+  - { id: ELEMENTAL, family: NATURE_SPIRIT }
+  # Dragon family
+  - { id: DRAGON, family: DRAGON }
+  - { id: WYVERN, family: DRAGON }
+  - { id: DRAKE, family: DRAGON }
+  - { id: WYRM, family: DRAGON }
+  # Beast family (mammals, large creatures)
+  - { id: WOLF, family: BEAST }
+  - { id: BEAR, family: BEAST }
+  - { id: STAG, family: BEAST }
+  - { id: BOAR, family: BEAST }
+  - { id: LION, family: BEAST }
+  - { id: TIGER, family: BEAST }
+  - { id: PANTHER, family: BEAST }
+  - { id: MAMMOTH, family: BEAST }
+  - { id: BISON, family: BEAST }
+  # Bird family
+  - { id: OWL, family: BIRD }
+  - { id: EAGLE, family: BIRD }
+  - { id: HAWK, family: BIRD }
+  - { id: RAVEN, family: BIRD }
+  - { id: PHOENIX, family: BIRD }
+  - { id: THUNDERBIRD, family: BIRD }
+  - { id: ROC, family: BIRD }
+  # Reptile family
+  - { id: SERPENT, family: REPTILE }
+  - { id: BASILISK, family: REPTILE }
+  - { id: HYDRA, family: REPTILE }
+  - { id: TURTLE, family: REPTILE }
+  - { id: SALAMANDER, family: REPTILE }
+  - { id: CHAMELEON, family: REPTILE }
+  # Aquatic family
+  - { id: KRAKEN, family: AQUATIC }
+  - { id: LEVIATHAN, family: AQUATIC }
+  - { id: NAGA, family: AQUATIC }
+  - { id: SEAHORSE, family: AQUATIC }
+  - { id: JELLYFISH, family: AQUATIC }
+  # Small creature family
+  - { id: FOX, family: SMALL_CREATURE }
+  - { id: RABBIT, family: SMALL_CREATURE }
+  - { id: BADGER, family: SMALL_CREATURE }
+  - { id: HEDGEHOG, family: SMALL_CREATURE }
+  - { id: SQUIRREL, family: SMALL_CREATURE }
+  - { id: OTTER, family: SMALL_CREATURE }
+  # Insectoid family
+  - { id: BEETLE, family: INSECTOID }
+  - { id: MOTH, family: INSECTOID }
+  - { id: SPIDER, family: INSECTOID }
+  - { id: SCORPION, family: INSECTOID }
+  - { id: MANTIS, family: INSECTOID }
+  # Undead family
+  - { id: WRAITH, family: UNDEAD }
+  - { id: REVENANT, family: UNDEAD }
+  - { id: LICH, family: UNDEAD }
+  # Construct family
+  - { id: GOLEM, family: CONSTRUCT }
+  - { id: GARGOYLE, family: CONSTRUCT }
+  # Mythic family
+  - { id: UNICORN, family: MYTHIC }
+  - { id: GRIFFIN, family: MYTHIC }
+  - { id: PEGASUS, family: MYTHIC }
+  - { id: CHIMERA, family: MYTHIC }
+  - { id: SPHINX, family: MYTHIC }
+  - { id: KIRIN, family: MYTHIC }
+
+# =============================================================================
+# BIOME -> SPECIES MAP
+# Which species can appear in which biome (8-15 per biome)
+# All species referenced here are defined in the species list above
+# =============================================================================
+
+biome_species_map:
+  FOREST:
+    - ELF
+    - DRYAD
+    - SPRIGGAN
+    - TREANT
+    - WOLF
+    - BEAR
+    - STAG
+    - FOX
+    - OWL
+    - BADGER
+    - SPIDER
+    - FAIRY
+    - UNICORN
+    - CENTAUR
+    - SQUIRREL
+
+  DEEP_FOREST:
+    - TREANT
+    - SPRIGGAN
+    - DRYAD
+    - WOLF
+    - BEAR
+    - PANTHER
+    - SPIDER
+    - OWL
+    - WISP
+    - BASILISK
+    - WRAITH
+    - TROLL
+
+  ENCHANTED_FOREST:
+    - FAIRY
+    - DRYAD
+    - UNICORN
+    - WISP
+    - NYMPH
+    - ELF
+    - SPRIGGAN
+    - FOX
+    - STAG
+    - SYLPH
+    - KIRIN
+    - MOTH
+
+  ANCIENT_FOREST:
+    - TREANT
+    - ELF
+    - DRAGON
+    - WYRM
+    - GRIFFIN
+    - SPHINX
+    - DRYAD
+    - OWL
+    - BEAR
+    - STAG
+    - LICH
+
+  BAMBOO_FOREST:
+    - PANTHER
+    - BEAR
+    - SERPENT
+    - MANTIS
+    - SPIDER
+    - FOX
+    - OWL
+    - CHAMELEON
+    - FAIRY
+    - GNOME
+
+  SWAMP:
+    - TROLL
+    - HYDRA
+    - SERPENT
+    - GOBLIN
+    - NAGA
+    - WRAITH
+    - BOAR
+    - SPIDER
+    - BASILISK
+    - SALAMANDER
+    - TURTLE
+
+  MANGROVE_SWAMP:
+    - SERPENT
+    - NAGA
+    - TURTLE
+    - SPIDER
+    - GOBLIN
+    - TROLL
+    - SALAMANDER
+    - OTTER
+    - CHAMELEON
+
+  BOG:
+    - WRAITH
+    - WISP
+    - TROLL
+    - GOBLIN
+    - HYDRA
+    - SERPENT
+    - BOAR
+    - BEETLE
+    - REVENANT
+
+  MOUNTAIN:
+    - DWARF
+    - ORC
+    - EAGLE
+    - HAWK
+    - GRIFFIN
+    - GOLEM
+    - BEAR
+    - STAG
+    - WOLF
+    - BISON
+    - ROC
+    - CENTAUR
+
+  HIGH_PEAK:
+    - EAGLE
+    - ROC
+    - THUNDERBIRD
+    - GRIFFIN
+    - DRAGON
+    - WYVERN
+    - DWARF
+    - GOLEM
+    - ELEMENTAL
+
+  VOLCANIC_MOUNTAIN:
+    - DRAGON
+    - SALAMANDER
+    - PHOENIX
+    - ELEMENTAL
+    - GOLEM
+    - DWARF
+    - WYRM
+    - BASILISK
+
+  SNOWLAND:
+    - WOLF
+    - BEAR
+    - MAMMOTH
+    - OWL
+    - FOX
+    - STAG
+    - DWARF
+    - RABBIT
+    - HAWK
+
+  GLACIER:
+    - MAMMOTH
+    - BEAR
+    - WOLF
+    - ELEMENTAL
+    - WYRM
+    - DRAGON
+    - GOLEM
+    - OWL
+
+  FROZEN_TUNDRA:
+    - WOLF
+    - MAMMOTH
+    - BISON
+    - BEAR
+    - FOX
+    - OWL
+    - HAWK
+    - STAG
+    - RABBIT
+    - REVENANT
+
+  ICE_CAVE:
+    - WYRM
+    - DRAGON
+    - ELEMENTAL
+    - GOLEM
+    - SPIDER
+    - BASILISK
+    - LICH
+    - BEAR
+
+  DESERT:
+    - SCORPION
+    - SERPENT
+    - BEETLE
+    - HAWK
+    - LION
+    - SPHINX
+    - SALAMANDER
+    - CHAMELEON
+    - BASILISK
+    - MANTIS
+
+  SAND_DUNE:
+    - SCORPION
+    - SERPENT
+    - BEETLE
+    - LION
+    - SPHINX
+    - HAWK
+    - WYRM
+    - ELEMENTAL
+
+  OASIS:
+    - NYMPH
+    - FAIRY
+    - SERPENT
+    - LION
+    - EAGLE
+    - FOX
+    - TURTLE
+    - OTTER
+    - SEAHORSE
+
+  BADLANDS:
+    - SCORPION
+    - BASILISK
+    - WRAITH
+    - GOLEM
+    - ORC
+    - SERPENT
+    - SPIDER
+    - REVENANT
+    - CHIMERA
+
+  OCEAN:
+    - KRAKEN
+    - LEVIATHAN
+    - MERFOLK
+    - SEAHORSE
+    - JELLYFISH
+    - SERPENT
+    - NAGA
+    - TURTLE
+
+  DEEP_OCEAN:
+    - KRAKEN
+    - LEVIATHAN
+    - WYRM
+    - JELLYFISH
+    - SERPENT
+    - NAGA
+    - BASILISK
+
+  CORAL_REEF:
+    - MERFOLK
+    - SEAHORSE
+    - JELLYFISH
+    - TURTLE
+    - NAGA
+    - FAIRY
+    - NYMPH
+    - OTTER
+
+  RIVER:
+    - OTTER
+    - TURTLE
+    - SERPENT
+    - NAGA
+    - MERFOLK
+    - NYMPH
+    - BEAR
+    - FOX
+
+  LAKE:
+    - MERFOLK
+    - NYMPH
+    - TURTLE
+    - OTTER
+    - SERPENT
+    - FAIRY
+    - WISP
+    - BEAR
+
+  WATERFALL:
+    - NYMPH
+    - ELEMENTAL
+    - SERPENT
+    - EAGLE
+    - SYLPH
+    - OTTER
+    - FAIRY
+    - DRAGON
+
+  CAVE:
+    - SPIDER
+    - BASILISK
+    - GOBLIN
+    - ORC
+    - DWARF
+    - GOLEM
+    - BEETLE
+    - WRAITH
+    - BEAR
+    - WOLF
+    - SALAMANDER
+
+  CRYSTAL_CAVE:
+    - GOLEM
+    - ELEMENTAL
+    - FAIRY
+    - WISP
+    - DWARF
+    - SPIDER
+    - WYRM
+    - GARGOYLE
+    - BEETLE
+
+  UNDERGROUND:
+    - GOBLIN
+    - DWARF
+    - SPIDER
+    - BEETLE
+    - WRAITH
+    - GOLEM
+    - LICH
+    - SCORPION
+
+  GRASSLAND:
+    - WOLF
+    - STAG
+    - RABBIT
+    - FOX
+    - EAGLE
+    - HAWK
+    - BISON
+    - LION
+    - CENTAUR
+    - HEDGEHOG
+    - SQUIRREL
+
+  SAVANNA:
+    - LION
+    - EAGLE
+    - HAWK
+    - BISON
+    - SCORPION
+    - SERPENT
+    - MANTIS
+    - BEETLE
+    - CENTAUR
+
+  STEPPE:
+    - WOLF
+    - ORC
+    - EAGLE
+    - HAWK
+    - BISON
+    - STAG
+    - FOX
+    - RABBIT
+    - CENTAUR
+    - GRIFFIN
+
+  JUNGLE:
+    - PANTHER
+    - TIGER
+    - SERPENT
+    - SPIDER
+    - MANTIS
+    - CHAMELEON
+    - MOTH
+    - FAIRY
+    - NAGA
+    - TREANT
+
+  RAINFOREST:
+    - PANTHER
+    - TIGER
+    - SERPENT
+    - MOTH
+    - CHAMELEON
+    - SPIDER
+    - FAIRY
+    - NYMPH
+    - TREANT
+    - BEETLE
+
+  CANOPY:
+    - MOTH
+    - OWL
+    - EAGLE
+    - HAWK
+    - SPIDER
+    - FAIRY
+    - SQUIRREL
+    - CHAMELEON
+    - SYLPH
+
+  VOLCANO:
+    - DRAGON
+    - PHOENIX
+    - SALAMANDER
+    - ELEMENTAL
+    - GOLEM
+    - WYRM
+    - DRAKE
+    - CHIMERA
+
+  LAVA_FIELD:
+    - SALAMANDER
+    - ELEMENTAL
+    - DRAGON
+    - PHOENIX
+    - GOLEM
+    - WYRM
+    - SCORPION
+
+  ISLAND:
+    - TURTLE
+    - MERFOLK
+    - EAGLE
+    - FOX
+    - RABBIT
+    - SEAHORSE
+    - FAIRY
+    - NYMPH
+
+  COAST:
+    - MERFOLK
+    - EAGLE
+    - TURTLE
+    - SEAHORSE
+    - OTTER
+    - JELLYFISH
+    - GRIFFIN
+
+  CLIFF:
+    - EAGLE
+    - HAWK
+    - ROC
+    - GRIFFIN
+    - GARGOYLE
+    - GOLEM
+    - WYVERN
+    - THUNDERBIRD
+
+  RUINS:
+    - WRAITH
+    - REVENANT
+    - LICH
+    - GARGOYLE
+    - GOLEM
+    - SPIDER
+    - OWL
+    - GOBLIN
+    - SERPENT
+    - SPHINX
+
+  CEMETERY:
+    - WRAITH
+    - REVENANT
+    - LICH
+    - RAVEN
+    - OWL
+    - SPIDER
+    - WOLF
+    - MOTH
+
+  VOID:
+    - WRAITH
+    - LICH
+    - ELEMENTAL
+    - WYRM
+    - CHIMERA
+    - SPHINX
+    - WISP
+
+  SKY_REALM:
+    - EAGLE
+    - PHOENIX
+    - THUNDERBIRD
+    - ROC
+    - PEGASUS
+    - GRIFFIN
+    - WYVERN
+    - DRAGON
+    - SYLPH
+    - FAIRY
+
+  CLOUD_PEAKS:
+    - THUNDERBIRD
+    - PEGASUS
+    - GRIFFIN
+    - DRAGON
+    - SYLPH
+    - EAGLE
+    - PHOENIX
+    - KIRIN
+
+  MUSHROOM_GROVE:
+    - FAIRY
+    - GNOME
+    - SPRIGGAN
+    - MOTH
+    - BEETLE
+    - SPIDER
+    - HEDGEHOG
+    - WISP
+    - DRYAD
+    - SQUIRREL
+
+# =============================================================================
+# SUBTYPE MAP
+# Species + Biome -> Subtype variants
+# Each species has a DEFAULT list plus biome-specific overrides where the
+# biome meaningfully changes the creature's nature.
+# =============================================================================
+
+subtype_map:
+
+  # --- WOLF (rich biome variants) ---
+  WOLF:
+    DEFAULT:
+      - TIMBER_WOLF
+      - LONE_WOLF
+      - DIRE_WOLF
+      - PACK_ALPHA
+    SNOWLAND:
+      - ICE_WOLF
+      - FROST_WOLF
+      - ARCTIC_HOWLER
+    FROZEN_TUNDRA:
+      - TUNDRA_WOLF
+      - PERMAFROST_STALKER
+      - BLIZZARD_WOLF
+    GLACIER:
+      - GLACIAL_WOLF
+      - FROZEN_FANG
+    DEEP_FOREST:
+      - SHADOW_WOLF
+      - NIGHT_PROWLER
+      - DARK_FANG
+    FOREST:
+      - WOODLAND_WOLF
+      - MOSSFUR_WOLF
+    MOUNTAIN:
+      - HIGHLAND_WOLF
+      - CRAG_WOLF
+    CAVE:
+      - CAVERN_WOLF
+      - PALE_WOLF
+    CEMETERY:
+      - GHOST_WOLF
+      - BONE_HOWLER
+    GRASSLAND:
+      - PLAINS_WOLF
+      - PRAIRIE_RUNNER
+
+  # --- DRAGON (rich biome variants) ---
+  DRAGON:
+    DEFAULT:
+      - ELDER_DRAGON
+      - FERAL_DRAGON
+      - YOUNG_DRAGON
+      - WYRM_DRAGON
+    VOLCANO:
+      - MAGMA_DRAGON
+      - FIRE_DRAKE
+      - INFERNO_DRAGON
+      - LAVA_WYRM
+    LAVA_FIELD:
+      - EMBER_DRAGON
+      - MOLTEN_DRAGON
+    ICE_CAVE:
+      - FROST_DRAGON
+      - GLACIER_DRAKE
+      - CRYSTAL_DRAGON
+    GLACIER:
+      - ICE_DRAGON
+      - FROZEN_WYRM
+    DEEP_OCEAN:
+      - SEA_DRAGON
+      - ABYSSAL_DRAGON
+    SKY_REALM:
+      - CLOUD_DRAGON
+      - STORM_DRAGON
+      - CELESTIAL_WYRM
+    CLOUD_PEAKS:
+      - SKY_DRAGON
+      - NIMBUS_DRAKE
+    ANCIENT_FOREST:
+      - FOREST_DRAGON
+      - ANCIENT_WYRM
+      - MOSS_DRAGON
+    WATERFALL:
+      - MIST_DRAGON
+      - CASCADE_WYRM
+    HIGH_PEAK:
+      - MOUNTAIN_DRAGON
+      - PEAK_WYRM
+    VOLCANIC_MOUNTAIN:
+      - CINDER_DRAGON
+      - ASH_WYRM
+
+  # --- ELF (rich biome variants) ---
+  ELF:
+    DEFAULT:
+      - WOOD_ELF
+      - HIGH_ELF
+      - WILD_ELF
+      - WANDERING_ELF
+    FOREST:
+      - FOREST_WARDEN
+      - LEAF_DANCER
+      - GROVE_KEEPER
+    ENCHANTED_FOREST:
+      - FAE_ELF
+      - STARLIGHT_ELF
+      - ENCHANTED_WARDEN
+    ANCIENT_FOREST:
+      - ELDER_ELF
+      - ANCIENT_KEEPER
+      - LORE_WARDEN
+
+  # --- BEAR (rich biome variants) ---
+  BEAR:
+    DEFAULT:
+      - BROWN_BEAR
+      - GRIZZLY
+      - CAVE_BEAR
+      - SPIRIT_BEAR
+    SNOWLAND:
+      - POLAR_BEAR
+      - FROST_BEAR
+      - ARCTIC_BEAR
+    FROZEN_TUNDRA:
+      - TUNDRA_BEAR
+      - ICE_GRIZZLY
+    GLACIER:
+      - GLACIER_BEAR
+      - FROZEN_GRIZZLY
+    FOREST:
+      - WOODLAND_BEAR
+      - HONEYFUR_BEAR
+    DEEP_FOREST:
+      - SHADOW_BEAR
+      - DARK_GRIZZLY
+    MOUNTAIN:
+      - HIGHLAND_BEAR
+      - CRAG_BEAR
+    BAMBOO_FOREST:
+      - BAMBOO_BEAR
+      - JADE_BEAR
+    CAVE:
+      - DEEP_BEAR
+      - PALE_GRIZZLY
+    ICE_CAVE:
+      - CRYSTAL_BEAR
+      - FROZEN_CAVE_BEAR
+    RIVER:
+      - RIVER_BEAR
+      - FISHER_BEAR
+    LAKE:
+      - LAKESIDE_BEAR
+      - WADING_BEAR
+
+  # --- SERPENT (rich biome variants) ---
+  SERPENT:
+    DEFAULT:
+      - VIPER
+      - CONSTRICTOR
+      - KING_SERPENT
+      - COILED_SERPENT
+    SWAMP:
+      - SWAMP_ADDER
+      - BOG_SERPENT
+      - MIRE_VIPER
+    DESERT:
+      - SAND_VIPER
+      - DUNE_SERPENT
+      - SIDEWINDER
+    JUNGLE:
+      - JUNGLE_PYTHON
+      - CANOPY_SERPENT
+      - VINE_SNAKE
+    RAINFOREST:
+      - EMERALD_SERPENT
+      - TREE_VIPER
+    OCEAN:
+      - SEA_SERPENT
+      - TIDAL_VIPER
+    DEEP_OCEAN:
+      - ABYSS_SERPENT
+      - DEEP_VIPER
+    CAVE:
+      - BLIND_SERPENT
+      - CAVERN_ADDER
+    RUINS:
+      - TEMPLE_SERPENT
+      - GUARDIAN_VIPER
+    RIVER:
+      - RIVER_SERPENT
+      - CURRENT_VIPER
+    BAMBOO_FOREST:
+      - BAMBOO_VIPER
+      - REED_SERPENT
+    MANGROVE_SWAMP:
+      - MANGROVE_SERPENT
+      - ROOT_VIPER
+
+  # --- PHOENIX (rich biome variants) ---
+  PHOENIX:
+    DEFAULT:
+      - FIRE_PHOENIX
+      - RISING_PHOENIX
+      - PHOENIX_HATCHLING
+      - ETERNAL_PHOENIX
+    VOLCANO:
+      - VOLCANIC_PHOENIX
+      - MAGMA_PHOENIX
+      - CALDERA_PHOENIX
+    LAVA_FIELD:
+      - EMBER_PHOENIX
+      - LAVA_PHOENIX
+    VOLCANIC_MOUNTAIN:
+      - MOUNTAIN_PHOENIX
+      - CINDER_PHOENIX
+    SKY_REALM:
+      - CELESTIAL_PHOENIX
+      - SKYFIRE_PHOENIX
+    CLOUD_PEAKS:
+      - DAWN_PHOENIX
+      - SUNRISE_PHOENIX
+
+  # --- GOLEM (rich biome variants) ---
+  GOLEM:
+    DEFAULT:
+      - STONE_GOLEM
+      - EARTH_GOLEM
+      - CLAY_GOLEM
+      - IRON_GOLEM
+    MOUNTAIN:
+      - MOUNTAIN_GOLEM
+      - GRANITE_GOLEM
+      - BOULDER_GOLEM
+    HIGH_PEAK:
+      - PEAK_GOLEM
+      - SUMMIT_SENTINEL
+    VOLCANIC_MOUNTAIN:
+      - OBSIDIAN_GOLEM
+      - MAGMA_GOLEM
+    VOLCANO:
+      - LAVA_GOLEM
+      - MOLTEN_GOLEM
+    LAVA_FIELD:
+      - SLAG_GOLEM
+      - CINDER_GOLEM
+    CRYSTAL_CAVE:
+      - CRYSTAL_GOLEM
+      - GEM_GOLEM
+      - PRISM_GOLEM
+    CAVE:
+      - CAVERN_GOLEM
+      - STALACTITE_GOLEM
+    UNDERGROUND:
+      - DEEP_GOLEM
+      - BEDROCK_GOLEM
+    ICE_CAVE:
+      - ICE_GOLEM
+      - FROST_GOLEM
+    GLACIER:
+      - GLACIAL_GOLEM
+      - PERMAFROST_GOLEM
+    RUINS:
+      - ANCIENT_GOLEM
+      - RUINED_SENTINEL
+    BADLANDS:
+      - DUST_GOLEM
+      - SANDSTONE_GOLEM
+    CLIFF:
+      - CLIFF_GOLEM
+      - CRAG_SENTINEL
+    DESERT:
+      - SAND_GOLEM
+
+  # --- FAIRY (rich biome variants) ---
+  FAIRY:
+    DEFAULT:
+      - SPRITE
+      - PIXIE
+      - FLUTTERWING
+      - WILL_O_WISP
+    FOREST:
+      - FOREST_SPRITE
+      - LEAF_FAIRY
+      - BARK_PIXIE
+    ENCHANTED_FOREST:
+      - FAE_QUEEN
+      - STARLIGHT_SPRITE
+      - DREAM_FAIRY
+    MUSHROOM_GROVE:
+      - MUSHROOM_FAIRY
+      - SPORE_SPRITE
+      - FUNGAL_PIXIE
+    CORAL_REEF:
+      - CORAL_FAIRY
+      - PEARL_SPRITE
+    ISLAND:
+      - ISLAND_SPRITE
+      - BREEZE_FAIRY
+    JUNGLE:
+      - JUNGLE_SPRITE
+      - ORCHID_FAIRY
+    RAINFOREST:
+      - RAIN_FAIRY
+      - CANOPY_SPRITE
+    OASIS:
+      - OASIS_SPRITE
+      - MIRAGE_FAIRY
+    SKY_REALM:
+      - SKY_FAIRY
+      - CLOUD_SPRITE
+    BAMBOO_FOREST:
+      - BAMBOO_FAIRY
+      - JADE_SPRITE
+    LAKE:
+      - LAKE_FAIRY
+      - WATER_SPRITE
+    WATERFALL:
+      - MIST_FAIRY
+      - CASCADE_SPRITE
+
+  # --- Remaining species (DEFAULT subtypes only) ---
+  DWARF:
+    DEFAULT:
+      - MOUNTAIN_DWARF
+      - HILL_DWARF
+      - DEEP_DWARF
+      - FORGE_DWARF
+
+  ORC:
+    DEFAULT:
+      - WAR_ORC
+      - SAVAGE_ORC
+      - GREY_ORC
+      - BERSERKER
+
+  GOBLIN:
+    DEFAULT:
+      - CAVE_GOBLIN
+      - SWAMP_GOBLIN
+      - SNEAK_GOBLIN
+      - BOMB_GOBLIN
+
+  TROLL:
+    DEFAULT:
+      - CAVE_TROLL
+      - SWAMP_TROLL
+      - FOREST_TROLL
+      - BRIDGE_TROLL
+
+  GNOME:
+    DEFAULT:
+      - FOREST_GNOME
+      - ROCK_GNOME
+      - TINKER_GNOME
+
+  NYMPH:
+    DEFAULT:
+      - RIVER_NYMPH
+      - LAKE_NYMPH
+      - DUSK_NYMPH
+      - DAWN_NYMPH
+
+  MERFOLK:
+    DEFAULT:
+      - SEA_DANCER
+      - DEEP_DIVER
+      - CORAL_SINGER
+      - TIDE_CALLER
+
+  CENTAUR:
+    DEFAULT:
+      - PLAINS_CENTAUR
+      - FOREST_CENTAUR
+      - WAR_CENTAUR
+      - SAGE_CENTAUR
+
+  DRYAD:
+    DEFAULT:
+      - OAK_DRYAD
+      - WILLOW_DRYAD
+      - ELDER_DRYAD
+      - BLOOM_DRYAD
+
+  SPRIGGAN:
+    DEFAULT:
+      - THORN_SPRIGGAN
+      - MOSS_SPRIGGAN
+      - ROOT_SPRIGGAN
+      - BARK_SPRIGGAN
+
+  TREANT:
+    DEFAULT:
+      - ANCIENT_TREANT
+      - YOUNG_TREANT
+      - OAK_TREANT
+      - WILLOW_TREANT
+
+  WISP:
+    DEFAULT:
+      - GHOST_WISP
+      - FLAME_WISP
+      - FROST_WISP
+      - SHADOW_WISP
+
+  SYLPH:
+    DEFAULT:
+      - WIND_SYLPH
+      - STORM_SYLPH
+      - BREEZE_SYLPH
+      - GALE_SYLPH
+
+  ELEMENTAL:
+    DEFAULT:
+      - FIRE_ELEMENTAL
+      - WATER_ELEMENTAL
+      - EARTH_ELEMENTAL
+      - AIR_ELEMENTAL
+    VOLCANO:
+      - MAGMA_ELEMENTAL
+      - CINDER_ELEMENTAL
+    LAVA_FIELD:
+      - LAVA_ELEMENTAL
+      - SLAG_ELEMENTAL
+    ICE_CAVE:
+      - ICE_ELEMENTAL
+      - FROST_ELEMENTAL
+    GLACIER:
+      - GLACIAL_ELEMENTAL
+      - PERMAFROST_ELEMENTAL
+    CRYSTAL_CAVE:
+      - CRYSTAL_ELEMENTAL
+      - GEM_ELEMENTAL
+    SAND_DUNE:
+      - SAND_ELEMENTAL
+      - DUST_ELEMENTAL
+    WATERFALL:
+      - CASCADE_ELEMENTAL
+      - MIST_ELEMENTAL
+    VOID:
+      - VOID_ELEMENTAL
+      - DARK_ELEMENTAL
+
+  WYVERN:
+    DEFAULT:
+      - LESSER_WYVERN
+      - GREATER_WYVERN
+      - VENOMTAIL_WYVERN
+
+  DRAKE:
+    DEFAULT:
+      - FIRE_DRAKE
+      - STONE_DRAKE
+      - WIND_DRAKE
+      - MARSH_DRAKE
+
+  WYRM:
+    DEFAULT:
+      - DEEP_WYRM
+      - FROST_WYRM
+      - SAND_WYRM
+      - ANCIENT_WYRM
+
+  STAG:
+    DEFAULT:
+      - NOBLE_STAG
+      - WHITE_STAG
+      - GREAT_STAG
+      - MOSSY_STAG
+
+  BOAR:
+    DEFAULT:
+      - WILD_BOAR
+      - TUSKED_BOAR
+      - DIRE_BOAR
+      - MUD_BOAR
+
+  LION:
+    DEFAULT:
+      - PRIDE_LION
+      - MANE_KING
+      - SAVANNA_LION
+      - GOLDEN_LION
+
+  TIGER:
+    DEFAULT:
+      - JUNGLE_TIGER
+      - WHITE_TIGER
+      - SHADOW_TIGER
+      - SABRETOOTH
+
+  PANTHER:
+    DEFAULT:
+      - SHADOW_PANTHER
+      - JUNGLE_PANTHER
+      - NIGHT_PANTHER
+      - DUSK_PANTHER
+
+  MAMMOTH:
+    DEFAULT:
+      - WOOLLY_MAMMOTH
+      - DIRE_MAMMOTH
+      - ICE_MAMMOTH
+      - ELDER_MAMMOTH
+
+  BISON:
+    DEFAULT:
+      - PLAINS_BISON
+      - THUNDER_BISON
+      - HIGHLAND_BISON
+      - STEPPE_BISON
+
+  OWL:
+    DEFAULT:
+      - GREAT_OWL
+      - BARN_OWL
+      - SNOW_OWL
+      - SPIRIT_OWL
+
+  EAGLE:
+    DEFAULT:
+      - GOLDEN_EAGLE
+      - WAR_EAGLE
+      - SEA_EAGLE
+      - STORM_EAGLE
+
+  HAWK:
+    DEFAULT:
+      - RED_HAWK
+      - NIGHT_HAWK
+      - WIND_HAWK
+      - DESERT_HAWK
+
+  RAVEN:
+    DEFAULT:
+      - SHADOW_RAVEN
+      - STORM_RAVEN
+      - DOOM_RAVEN
+      - GHOST_RAVEN
+
+  THUNDERBIRD:
+    DEFAULT:
+      - STORM_THUNDERBIRD
+      - LIGHTNING_THUNDERBIRD
+      - TEMPEST_THUNDERBIRD
+
+  ROC:
+    DEFAULT:
+      - GREATER_ROC
+      - MOUNTAIN_ROC
+      - ANCIENT_ROC
+
+  BASILISK:
+    DEFAULT:
+      - STONE_BASILISK
+      - VENOM_BASILISK
+      - ELDER_BASILISK
+      - DESERT_BASILISK
+
+  HYDRA:
+    DEFAULT:
+      - SWAMP_HYDRA
+      - FIRE_HYDRA
+      - FROST_HYDRA
+      - ELDER_HYDRA
+
+  TURTLE:
+    DEFAULT:
+      - SEA_TURTLE
+      - SNAPPING_TURTLE
+      - ANCIENT_TURTLE
+      - MOSS_TURTLE
+
+  SALAMANDER:
+    DEFAULT:
+      - FIRE_SALAMANDER
+      - CAVE_SALAMANDER
+      - GIANT_SALAMANDER
+      - EMBER_SALAMANDER
+
+  CHAMELEON:
+    DEFAULT:
+      - PHASE_CHAMELEON
+      - JUNGLE_CHAMELEON
+      - CRYSTAL_CHAMELEON
+      - SHADOW_CHAMELEON
+
+  KRAKEN:
+    DEFAULT:
+      - DEEP_KRAKEN
+      - STORM_KRAKEN
+      - ELDER_KRAKEN
+
+  LEVIATHAN:
+    DEFAULT:
+      - ABYSSAL_LEVIATHAN
+      - STORM_LEVIATHAN
+      - ANCIENT_LEVIATHAN
+
+  NAGA:
+    DEFAULT:
+      - RIVER_NAGA
+      - DEEP_NAGA
+      - ROYAL_NAGA
+      - SHADOW_NAGA
+
+  SEAHORSE:
+    DEFAULT:
+      - REEF_SEAHORSE
+      - GIANT_SEAHORSE
+      - CRYSTAL_SEAHORSE
+
+  JELLYFISH:
+    DEFAULT:
+      - GIANT_JELLYFISH
+      - LUMINOUS_JELLYFISH
+      - STORM_JELLYFISH
+      - DEEP_JELLYFISH
+
+  FOX:
+    DEFAULT:
+      - RED_FOX
+      - SILVER_FOX
+      - ARCTIC_FOX
+      - SPIRIT_FOX
+
+  RABBIT:
+    DEFAULT:
+      - JACK_RABBIT
+      - SNOWSHOE_RABBIT
+      - MOON_RABBIT
+      - BURROW_RABBIT
+
+  BADGER:
+    DEFAULT:
+      - HONEY_BADGER
+      - FOREST_BADGER
+      - STONE_BADGER
+      - STRIPED_BADGER
+
+  HEDGEHOG:
+    DEFAULT:
+      - FOREST_HEDGEHOG
+      - BRAMBLE_HEDGEHOG
+      - CRYSTAL_HEDGEHOG
+
+  SQUIRREL:
+    DEFAULT:
+      - FLYING_SQUIRREL
+      - OAK_SQUIRREL
+      - SHADOW_SQUIRREL
+      - GOLDEN_SQUIRREL
+
+  OTTER:
+    DEFAULT:
+      - RIVER_OTTER
+      - SEA_OTTER
+      - GIANT_OTTER
+      - PLAYFUL_OTTER
+
+  BEETLE:
+    DEFAULT:
+      - STAG_BEETLE
+      - SCARAB_BEETLE
+      - JEWEL_BEETLE
+      - IRONSHELL_BEETLE
+
+  MOTH:
+    DEFAULT:
+      - LUNA_MOTH
+      - DEATH_MOTH
+      - SILK_MOTH
+      - GHOST_MOTH
+
+  SPIDER:
+    DEFAULT:
+      - ORB_WEAVER
+      - CAVE_SPIDER
+      - GIANT_SPIDER
+      - SHADOW_SPIDER
+
+  SCORPION:
+    DEFAULT:
+      - SAND_SCORPION
+      - CAVE_SCORPION
+      - GIANT_SCORPION
+      - VENOM_SCORPION
+
+  MANTIS:
+    DEFAULT:
+      - ORCHID_MANTIS
+      - GIANT_MANTIS
+      - GHOST_MANTIS
+      - BLADE_MANTIS
+
+  WRAITH:
+    DEFAULT:
+      - SHADOW_WRAITH
+      - FROST_WRAITH
+      - BANSHEE_WRAITH
+      - WAILING_WRAITH
+
+  REVENANT:
+    DEFAULT:
+      - VENGEFUL_REVENANT
+      - CURSED_REVENANT
+      - FALLEN_KNIGHT
+      - HOLLOW_REVENANT
+
+  LICH:
+    DEFAULT:
+      - ELDER_LICH
+      - FROST_LICH
+      - BONE_LICH
+      - ARCH_LICH
+
+  GARGOYLE:
+    DEFAULT:
+      - STONE_GARGOYLE
+      - CATHEDRAL_GARGOYLE
+      - OBSIDIAN_GARGOYLE
+      - ANCIENT_GARGOYLE
+
+  UNICORN:
+    DEFAULT:
+      - WHITE_UNICORN
+      - SHADOW_UNICORN
+      - GOLDEN_UNICORN
+      - STARLIGHT_UNICORN
+
+  GRIFFIN:
+    DEFAULT:
+      - GOLDEN_GRIFFIN
+      - STORM_GRIFFIN
+      - MOUNTAIN_GRIFFIN
+      - ROYAL_GRIFFIN
+
+  PEGASUS:
+    DEFAULT:
+      - WHITE_PEGASUS
+      - STORM_PEGASUS
+      - STARLIGHT_PEGASUS
+      - DAWN_PEGASUS
+
+  CHIMERA:
+    DEFAULT:
+      - FLAME_CHIMERA
+      - FROST_CHIMERA
+      - SHADOW_CHIMERA
+      - ELDER_CHIMERA
+
+  SPHINX:
+    DEFAULT:
+      - SAND_SPHINX
+      - OBSIDIAN_SPHINX
+      - GOLDEN_SPHINX
+      - RIDDLE_SPHINX
+
+  KIRIN:
+    DEFAULT:
+      - GOLDEN_KIRIN
+      - JADE_KIRIN
+      - STORM_KIRIN
+      - CELESTIAL_KIRIN
+
+# =============================================================================
+# ELEMENTS
+# =============================================================================
+
+elements:
+  - FIRE
+  - WATER
+  - EARTH
+  - AIR
+  - ICE
+  - LIGHTNING
+  - SHADOW
+  - LIGHT
+  - POISON
+  - NATURE
+  - ARCANE
+  - VOID
+
+# =============================================================================
+# TEMPERAMENTS
+# =============================================================================
+
+temperaments:
+  - PEACEFUL
+  - CAUTIOUS
+  - CURIOUS
+  - PLAYFUL
+  - AGGRESSIVE
+  - NOBLE
+  - MISCHIEVOUS
+  - STOIC
+  - WISE
+  - FERAL
+
+# =============================================================================
+# SIZES
+# =============================================================================
+
+sizes:
+  - TINY
+  - SMALL
+  - MEDIUM
+  - LARGE
+  - HUGE
+  - COLOSSAL
+
+# =============================================================================
+# VARIANT PREFIXES (~25)
+# =============================================================================
+
+variants:
+  - MOSSBOUND
+  - FROSTBORN
+  - SHADOWTOUCHED
+  - SUNBLESSED
+  - STORMFORGED
+  - IRONHIDE
+  - CRYSTALVEIN
+  - THORNBACK
+  - EMBERHEART
+  - MOONLIT
+  - STARGAZER
+  - DUSKWALKER
+  - DAWNWING
+  - ROTROOT
+  - ASHCOAT
+  - DEEPWATER
+  - WINDRIDER
+  - BONECARVED
+  - NIGHTSHADE
+  - GOLDMANE
+  - SILVERTHORN
+  - BLOODTHORN
+  - VOIDTOUCHED
+  - STONEBORN
+  - WILDBLOOM
+
+# =============================================================================
+# PRIMARY COLOURS
+# =============================================================================
+
+primary_colors:
+  - CRIMSON
+  - EMERALD
+  - SAPPHIRE
+  - AMBER
+  - OBSIDIAN
+  - IVORY
+  - VIOLET
+  - COPPER
+  - SILVER
+  - GOLD
+  - JADE
+  - ONYX
+  - PEARL
+  - RUST
+  - TEAL
+  - INDIGO
+
+# =============================================================================
+# SECONDARY COLOURS
+# =============================================================================
+
+secondary_colors:
+  - WHITE
+  - BLACK
+  - GREY
+  - BROWN
+  - TAN
+  - CREAM
+  - MOSS
+  - SKY
+  - SAND
+  - CHARCOAL
+  - BONE
+  - SLATE
+
+# =============================================================================
+# SIGILS
+# =============================================================================
+
+sigils:
+  - LEAF
+  - CLAW
+  - FLAME
+  - WAVE
+  - STAR
+  - MOON
+  - SUN
+  - SKULL
+  - CROWN
+  - SHIELD
+  - FEATHER
+  - FANG
+
+# =============================================================================
+# FRAME STYLES
+# =============================================================================
+
+frame_styles:
+  - RUSTIC
+  - ORNATE
+  - ANCIENT
+  - CRYSTALLINE
+  - SHADOW
+  - GILDED
+  - NATURAL
+  - RUNIC
+
+# =============================================================================
+# TITLE GENERATION
+# =============================================================================
+
+roles:
+  - Warden
+  - Herald
+  - Guardian
+  - Sentinel
+  - Keeper
+  - Hunter
+  - Wanderer
+  - Oracle
+  - Champion
+  - Outcast
+  - Elder
+  - Mystic
+  - Stalker
+  - Sovereign
+  - Phantom
+
+domains:
+  - Hollow Pines
+  - White Storms
+  - Ashen Falls
+  - Crimson Dusk
+  - Silent Peaks
+  - Whispering Marsh
+  - Frozen Reach
+  - Verdant Depths
+  - Shattered Stone
+  - Moonlit Glade
+  - Burning Sands
+  - Crystal Caverns
+  - Twilight Shore
+  - Thunder Ridge
+  - Iron Wastes
+  - Emerald Canopy
+  - Lost Ruins
+  - Shadow Veil
+  - Dawn Meadow
+  - Starfall Basin

@@ -24,6 +24,11 @@ const SERVICE_CONFIG = {
     timeout: 120000,
     pathPrefix: '/chat',  // Chat routes are /chat/* on the LLM service
   },
+  characters: {
+    url: process.env.CHARACTER_SERVICE_URL || 'http://character:5002',
+    timeout: 30000,
+    pathPrefix: '',  // Character routes are /generate, /creatures/*, /collection/*, /supply
+  },
 };
 
 module.exports = { SERVICE_CONFIG };

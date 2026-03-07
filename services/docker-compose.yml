@@ -49,6 +49,7 @@ services:
       COMMERCE_SERVICE_URL: http://commerce:3004
       IMAGE_SERVICE_URL: http://image-service:5001
       LLM_SERVICE_URL: http://llm-service:5000
+      CHARACTER_SERVICE_URL: http://character:5002
       REDIS_URL: redis://redis:6379
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8081,http://localhost:19006}
     depends_on:
@@ -151,6 +152,28 @@ services:
       mongodb:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - wf-network
+
+  # ===== Character Service =====
+  character:
+    build:
+      context: .
+      dockerfile: character-service/Dockerfile
+    container_name: wf-character
+    environment:
+      SERVICE_NAME: character
+      MONGODB_URI: mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-changeme}@mongodb:27017/wildernessfriends?authSource=admin
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 5002
+      GENERATION_CONFIG_PATH: /app/config/generation_v1.yml
+      PERMISSIONS_SERVICE_URL: http://permissions:5003
+      LLM_SERVICE_URL: http://llm-service:5000
+      IMAGE_SERVICE_URL: http://image-service:5001
+    depends_on:
+      mongodb:
         condition: service_healthy
     networks:
       - wf-network
