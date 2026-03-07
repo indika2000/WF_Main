@@ -1,0 +1,12 @@
+I want to use the files: documents\Planning\CharacterLoreUniqueness_Planning\earlyThinking_and_workings.md
+and: documents\Planning\CharacterLoreUniqueness_Planning\Additional_Thoughts.md
+
+which has my early thinking and discussion on character generation, some details how to build the schema and using bar codes and QRs to create unique characterts which avoid duplications.
+
+I want to develop these docs and thinking to create a robust methodology and process to do this creation, with the right level of flexibility and configurability for future amendments. This means we need to think through how we plan and build for this, how we manage this in a middleware layer of the application / off client server process as we'll need to maintain a registry, avoid multiple users clashing, keeping a registry of created characters, I'm also thinking I want to have a view on how we maintain a count of characters created i.e. we would allow for 100,000 of the same common characters to be made, but not 100,001, and keep our most rarest of charcter types down to a much smaller number like 10, or even 1 to make finding the most rarest of characters and the chase exciting for users.
+
+We need to think how this system handles 100,000s of users all generating characters at the same time, and remembering that this system will eventually be linked to an LLM image and more generation, so need to handle not only that volume, but also when a character has been generated we register it, keep the generated image logged in our image server so we do not send duplicate wasted calls to the LLM.
+
+I want you to really think through not only the suggested algorithm and if it works, but now also think through the system we are trying to build, whether we should have a character server / service, or we should build that into our proxy server etc. I want you to also think throgh how we test this in the mobile app, alongside a much bigger test where we have 100s of barcodes which then go and generate characters and we check for duplicates (incorrect dups) but also check for when we want to test for dupes on purpose to show our seeding and algo for character generation is working properly.
+
+Does this all make sense? Can you start thinking deeply about this and put together you plan and thinking based on these documents and we can discuss further. Place you depply though plan and questions here: documents\Planning\CharacterLoreUniqueness_Planning
