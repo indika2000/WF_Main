@@ -82,7 +82,13 @@ router.use('/commerce', createServiceProxy(...));
 
 ### 9. CORS Must Include LAN IP for Physical Device Testing
 
-CORS is configured for `localhost:8081` (Expo Metro) and `localhost:19006` (Expo web) by default. Physical devices on the same LAN connect via the host machine's IP address (e.g., `192.168.x.x:3000`), not `localhost`. Add the host IP to `CORS_ORIGINS` when testing on physical devices.
+CORS is configured for `localhost:8081` (Expo Metro) and `localhost:19006` (Expo web) by default. Physical devices on the same LAN connect via the host machine's IP address (e.g., `192.168.4.100:3000`), not `localhost`. Add the host IP to `CORS_ORIGINS` when testing on physical devices.
+
+**Recommended:** Set a static LAN IP on your development machine (see #34) so this value never changes. Current dev setup uses `192.168.4.100`.
+
+```
+CORS_ORIGINS=http://localhost:8081,http://localhost:19006,http://192.168.4.100:8081
+```
 
 ---
 
@@ -278,13 +284,24 @@ When writing new SDK functions, never access `.data.data`.
 
 The mobile app must complete the Firebase → Gateway JWT exchange before any API calls. `AuthContext.apiReady` becomes `true` only after the exchange succeeds. Components and the dev tools screen check `apiReady` before calling SDK functions.
 
-### 34. `localhost` Does Not Work on Android Devices
+### 34. `localhost` Does Not Work on Android Devices — Use a Static LAN IP
 
 On Android emulators and physical devices, `localhost` refers to the device itself, not the host machine. The `.env` must use the host machine's LAN IP:
 ```
-EXPO_PUBLIC_API_URL=http://192.168.x.x:3000/api
+EXPO_PUBLIC_API_URL=http://192.168.4.100:3000/api
 ```
 For Android emulator specifically, `10.0.2.2` maps to the host machine's localhost.
+
+**Static IP setup (Windows):** Expo's Metro bundler advertises the host machine's LAN IP, which changes whenever the network adapter reconnects. To prevent this:
+1. Open **Settings → Network & Internet → Advanced network settings**
+2. Find your active adapter (e.g., Ethernet 2), click **Edit**
+3. Change IP assignment from **Automatic (DHCP)** to **Manual**
+4. Toggle **IPv4** on and set:
+   - IP address: `192.168.4.100` (pick a high number to avoid DHCP conflicts)
+   - Subnet prefix length: `22` (matches `255.255.252.0` — check your current subnet mask)
+   - Gateway: `192.168.4.1` (same as your router)
+   - Preferred DNS: `8.8.8.8`, Alternate DNS: `8.8.4.4`
+5. Update `WildernessFriends/.env` (`EXPO_PUBLIC_API_URL`) and `services/.env` (`CORS_ORIGINS`) with the static IP
 
 ### 35. NativeWind Must Be Pinned to `~4.1.23`
 

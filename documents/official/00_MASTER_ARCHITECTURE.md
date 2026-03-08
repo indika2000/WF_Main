@@ -266,7 +266,7 @@ The mobile SDK's Axios interceptor auto-unwraps `data`, so SDK functions return 
 | `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase web config |
 | `EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase web config |
 | `EXPO_PUBLIC_FIREBASE_APP_ID` | Firebase web config |
-| `EXPO_PUBLIC_API_URL` | Gateway URL (e.g., `http://192.168.x.x:3000/api`) |
+| `EXPO_PUBLIC_API_URL` | Gateway URL — use static LAN IP (e.g., `http://192.168.4.100:3000/api`) |
 
 ## 9. Docker Commands Quick Reference
 
