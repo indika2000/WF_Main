@@ -2,7 +2,7 @@ module.exports = {
   testEnvironment: 'node',
   rootDir: '..',
   testMatch: ['<rootDir>/tests/**/*.test.js'],
-  setupFilesAfterSetup: ['<rootDir>/tests/setup.js'],
+  setupFiles: ['<rootDir>/tests/setup.js'],
   testTimeout: 10000,
   verbose: true,
   forceExit: true,

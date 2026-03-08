@@ -7,10 +7,7 @@ process.env.PERMISSIONS_SERVICE_URL = 'http://permissions:5003';
 // Mock firebase before requiring app
 jest.mock('../../src/config/firebase', () => ({
   auth: {
-    verifyIdToken: jest.fn().mockResolvedValue({
-      uid: 'test-user-123',
-      email: 'test@example.com',
-    }),
+    verifyIdToken: jest.fn(),
   },
 }));
 
@@ -18,8 +15,17 @@ const request = require('supertest');
 const nock = require('nock');
 const app = require('../../src/app');
 const { verifyToken } = require('../../src/utils/jwt');
+const firebase = require('../../src/config/firebase');
 
 const PERMISSIONS_URL = 'http://permissions:5003';
+
+beforeEach(() => {
+  // Restore mock after resetMocks clears it each test
+  firebase.auth.verifyIdToken.mockResolvedValue({
+    uid: 'test-user-123',
+    email: 'test@example.com',
+  });
+});
 
 afterEach(() => {
   nock.cleanAll();
