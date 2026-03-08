@@ -85,7 +85,7 @@ def generate_creature(
     # byte[21+] → lore/domain, future expansion
 
     rarity = config.get_rarity(seed[0])
-    biome = _pick(seed[1], config.biomes)
+    biome = config.get_biome(seed[1])
 
     # Species constrained by biome
     eligible_species = config.get_species_for_biome(biome)
@@ -187,7 +187,7 @@ def generate_claimed_variant(
     seed = _hash_seed(claimed_canonical)
 
     # Force Common rarity
-    biome = _pick(seed[1], config.biomes)
+    biome = config.get_biome(seed[1])
     eligible_species = config.get_species_for_biome(biome)
     species = _pick(seed[3], eligible_species)
     family = config.get_family(species)

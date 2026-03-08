@@ -42,6 +42,23 @@ class GenerationConfig:
         self.biome_species_map: dict[str, list[str]] = data["biome_species_map"]
         self.subtype_map: dict[str, dict[str, list[str]]] = data["subtype_map"]
 
+        # Optional biome weights for seasonal theming
+        raw_weights = data.get("biome_weights", None)
+        if raw_weights is not None:
+            self.biome_weights: dict[str, int] | None = raw_weights
+            # Pre-compute cumulative weight table (iterate biomes list for determinism)
+            self._biome_cumulative: list[tuple[int, str]] = []
+            cumulative = 0
+            for biome in self.biomes:
+                weight = self.biome_weights.get(biome, 1)  # default weight 1
+                cumulative += weight
+                self._biome_cumulative.append((cumulative, biome))
+            self._biome_total_weight: int = cumulative
+        else:
+            self.biome_weights = None
+            self._biome_cumulative = []
+            self._biome_total_weight = 0
+
         # Build lookup indexes
         self._species_ids: list[str] = [s["id"] for s in self.species_list]
         self._species_family: dict[str, str] = {
@@ -83,11 +100,27 @@ class GenerationConfig:
             if rarity not in self.collision_policy:
                 raise ValueError(f"Rarity '{rarity}' missing from collision_policy")
 
+        # Validate biome weights if present
+        if self.biome_weights is not None:
+            for biome in self.biome_weights:
+                if biome not in self.biomes:
+                    raise ValueError(
+                        f"Biome '{biome}' in biome_weights not in biomes list"
+                    )
+            for biome, weight in self.biome_weights.items():
+                if not isinstance(weight, int) or weight < 1:
+                    raise ValueError(
+                        f"Weight for biome '{biome}' must be a positive integer, got {weight}"
+                    )
+
         logger.info(
-            "Config validated: %d biomes, %d species, %d subtype entries",
+            "Config validated: %d biomes, %d species, %d subtype entries%s",
             len(self.biomes),
             len(self._species_ids),
             len(self.subtype_map),
+            f", biome_weights active (total={self._biome_total_weight})"
+            if self.biome_weights
+            else "",
         )
 
     def get_rarity(self, byte_val: int) -> str:
@@ -97,6 +130,16 @@ class GenerationConfig:
             if weight["min"] <= roll <= weight["max"]:
                 return rarity
         return "COMMON"
+
+    def get_biome(self, byte_val: int) -> str:
+        """Get biome from byte value, using weights if configured."""
+        if self.biome_weights is None:
+            return self.biomes[byte_val % len(self.biomes)]
+        position = byte_val % self._biome_total_weight
+        for cumulative_threshold, biome in self._biome_cumulative:
+            if position < cumulative_threshold:
+                return biome
+        return self._biome_cumulative[-1][1]
 
     def get_species_for_biome(self, biome: str) -> list[str]:
         """Get eligible species for a biome."""

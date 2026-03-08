@@ -1,8 +1,11 @@
 """Unit tests for generation config loading and validation."""
 
-import pytest
+import os
 
-from app.services.config_loader import get_config
+import pytest
+import yaml
+
+from app.services.config_loader import GenerationConfig, get_config
 
 
 class TestConfigLoading:
@@ -107,3 +110,63 @@ class TestConfigLoading:
         for rarity, cap in caps.items():
             if rarity != "LEGENDARY":
                 assert cap >= legendary_cap
+
+
+class TestBiomeWeights:
+    """Verify weighted biome selection logic."""
+
+    def test_v1_has_no_biome_weights(self):
+        config = get_config()
+        assert config.biome_weights is None
+
+    def test_get_biome_uniform_without_weights(self):
+        """Without biome_weights, get_biome behaves identically to modulo pick."""
+        config = get_config()
+        for byte_val in range(256):
+            expected = config.biomes[byte_val % len(config.biomes)]
+            assert config.get_biome(byte_val) == expected
+
+    def test_get_biome_weighted_deterministic(self, v2_config):
+        """Same byte value always returns same biome with weights."""
+        for byte_val in range(256):
+            result1 = v2_config.get_biome(byte_val)
+            result2 = v2_config.get_biome(byte_val)
+            assert result1 == result2
+
+    def test_weighted_biome_coverage(self, v2_config):
+        """All biomes should be reachable with weights (no biome has 0 chance)."""
+        reachable = set()
+        for byte_val in range(256):
+            reachable.add(v2_config.get_biome(byte_val))
+        assert reachable == set(v2_config.biomes), (
+            f"Unreachable biomes: {set(v2_config.biomes) - reachable}"
+        )
+
+    def test_invalid_biome_in_weights_raises(self):
+        """biome_weights with unknown biome should raise ValueError."""
+        v1_path = os.environ["GENERATION_CONFIG_PATH"]
+        with open(v1_path) as f:
+            data = yaml.safe_load(f)
+        data["biome_weights"] = {"NONEXISTENT_BIOME": 5}
+        with pytest.raises(ValueError, match="not in biomes list"):
+            GenerationConfig(data)
+
+    def test_zero_weight_raises(self):
+        """Weight of 0 should raise ValueError."""
+        v1_path = os.environ["GENERATION_CONFIG_PATH"]
+        with open(v1_path) as f:
+            data = yaml.safe_load(f)
+        data["biome_weights"] = {"OCEAN": 0}
+        with pytest.raises(ValueError, match="positive integer"):
+            GenerationConfig(data)
+
+    def test_v2_config_matches_v1_structure(self, v2_config):
+        """v2 test config should match v1 except version and biome_weights."""
+        v1_config = get_config()
+        assert v2_config.version == "v2"
+        assert v1_config.version == "v1"
+        assert v2_config.biomes == v1_config.biomes
+        assert v2_config.biome_species_map == v1_config.biome_species_map
+        assert v2_config._species_ids == v1_config._species_ids
+        assert v2_config.elements == v1_config.elements
+        assert v2_config.rarity_weights == v1_config.rarity_weights

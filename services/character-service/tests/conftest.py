@@ -9,13 +9,14 @@ os.environ["GENERATION_CONFIG_PATH"] = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "config", "generation_v1.yml"
 )
 
+import yaml
 import jwt as pyjwt
 import pytest
 from httpx import ASGITransport, AsyncClient
 from mongomock_motor import AsyncMongoMockClient
 
 from app.main import app
-from app.services.config_loader import load_config
+from app.services.config_loader import GenerationConfig, load_config
 
 
 # ── Database Fixtures ────────────────────────────────────────────────────────
@@ -56,6 +57,18 @@ def load_generation_config():
     """Ensure generation config is loaded for every test."""
     config_path = os.environ["GENERATION_CONFIG_PATH"]
     load_config(config_path)
+
+
+# ── v2 Config Fixture ───────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def v2_config():
+    """Load v2 test config as a standalone GenerationConfig (no singleton mutation)."""
+    v2_path = os.path.join(os.path.dirname(__file__), "fixtures", "generation_v2_test.yml")
+    with open(v2_path) as f:
+        data = yaml.safe_load(f)
+    return GenerationConfig(data)
 
 
 # ── Auth Fixtures ────────────────────────────────────────────────────────────
