@@ -1,0 +1,979 @@
+version: "c1"
+namespace: "CYBER_FRIENDS"
+id_prefix: "CF"
+name_template: "{variant} {sub_type}"
+title_template: "{role} of {domain}"
+
+# =============================================================================
+# RARITY SYSTEM (same structure, different flavour text)
+# =============================================================================
+
+rarity_weights:
+  COMMON:    { min: 0, max: 69 }
+  UNCOMMON:  { min: 70, max: 89 }
+  RARE:      { min: 90, max: 96 }
+  EPIC:      { min: 97, max: 98 }
+  LEGENDARY: { min: 99, max: 99 }
+
+supply_caps:
+  COMMON:    null
+  UNCOMMON:  100000
+  RARE:      25000
+  EPIC:      5000
+  LEGENDARY: 500
+
+collision_policy:
+  COMMON:    ALLOW
+  UNCOMMON:  ALLOW
+  RARE:      ALLOW_IF_STATS_DIFFER
+  EPIC:      REROLL_ON_SIGNATURE_MATCH
+  LEGENDARY: REROLL_ON_ANY_ARCHETYPE_MATCH
+
+max_reroll_attempts: 10
+
+stat_ranges:
+  COMMON:    { min: 10, max: 40 }
+  UNCOMMON:  { min: 25, max: 55 }
+  RARE:      { min: 40, max: 70 }
+  EPIC:      { min: 55, max: 85 }
+  LEGENDARY: { min: 70, max: 100 }
+
+stat_names:
+  - power
+  - defense
+  - agility
+  - wisdom
+  - ferocity
+  - magic
+  - luck
+
+# =============================================================================
+# BIOMES (30 futuristic zones)
+# =============================================================================
+
+biomes:
+  - NEON_DISTRICT
+  - TECH_HUB
+  - DATA_CENTER
+  - FACTORY_FLOOR
+  - JUNKYARD
+  - ORBITAL_STATION
+  - SPACE_DOCK
+  - ASTEROID_BELT
+  - UNDERCITY
+  - SEWER_NETWORK
+  - BLACK_MARKET
+  - SKYWAY
+  - CLOUD_TOWER
+  - WASTELAND
+  - RADIATION_ZONE
+  - RUINS_SECTOR
+  - VIRTUAL_REALM
+  - CYBERSPACE
+  - NEURAL_NET
+  - HARBOR_DISTRICT
+  - AQUA_DOME
+  - SUBMARINE_BAY
+  - POWER_PLANT
+  - REACTOR_CORE
+  - RESEARCH_LAB
+  - MILITARY_BASE
+  - SCRAPYARD
+  - GREENHOUSE_DOME
+  - CRYO_VAULT
+  - HOLO_ARENA
+
+# =============================================================================
+# SPECIES (40 across 9 families)
+# =============================================================================
+
+species:
+  # Android family
+  - { id: ANDROID, family: ANDROID }
+  - { id: SYNTH, family: ANDROID }
+  - { id: HUMANOID_BOT, family: ANDROID }
+  - { id: COMPANION_UNIT, family: ANDROID }
+  - { id: REPLIKA, family: ANDROID }
+  # Mech family
+  - { id: MECH_GUARDIAN, family: MECH }
+  - { id: BATTLE_MECH, family: MECH }
+  - { id: SCOUT_MECH, family: MECH }
+  - { id: SIEGE_MECH, family: MECH }
+  - { id: NANO_MECH, family: MECH }
+  # Drone family
+  - { id: RECON_DRONE, family: DRONE }
+  - { id: COMBAT_DRONE, family: DRONE }
+  - { id: CARGO_DRONE, family: DRONE }
+  - { id: STEALTH_DRONE, family: DRONE }
+  # Cyborg family
+  - { id: ENFORCER, family: CYBORG }
+  - { id: STREET_SAMURAI, family: CYBORG }
+  - { id: TECHNO_MONK, family: CYBORG }
+  - { id: CHROME_RUNNER, family: CYBORG }
+  - { id: IRON_SURGEON, family: CYBORG }
+  # Digital family
+  - { id: AI_CONSTRUCT, family: DIGITAL }
+  - { id: HOLOGRAM, family: DIGITAL }
+  - { id: DATA_PHANTOM, family: DIGITAL }
+  - { id: VIRUS_ENTITY, family: DIGITAL }
+  - { id: GLITCH_SPRITE, family: DIGITAL }
+  # Mutant family
+  - { id: GENE_SPLICE, family: MUTANT }
+  - { id: RADIATION_MUTANT, family: MUTANT }
+  - { id: BIO_HYBRID, family: MUTANT }
+  - { id: FERAL_CLONE, family: MUTANT }
+  # Vehicle family
+  - { id: HOVER_TANK, family: VEHICLE }
+  - { id: SPIDER_WALKER, family: VEHICLE }
+  - { id: JET_RACER, family: VEHICLE }
+  - { id: MOTO_WOLF, family: VEHICLE }
+  # Alien family
+  - { id: XENOMORPH, family: ALIEN }
+  - { id: VOID_CRAWLER, family: ALIEN }
+  - { id: STAR_DRIFTER, family: ALIEN }
+  - { id: NEBULA_ENTITY, family: ALIEN }
+  # Nano family
+  - { id: SWARM_CLOUD, family: NANO }
+  - { id: NANO_GOLEM, family: NANO }
+  - { id: ASSEMBLER, family: NANO }
+  - { id: DISASSEMBLER, family: NANO }
+
+# =============================================================================
+# BIOME -> SPECIES MAP (8-12 per biome)
+# =============================================================================
+
+biome_species_map:
+  NEON_DISTRICT:
+    - ANDROID
+    - SYNTH
+    - ENFORCER
+    - STREET_SAMURAI
+    - CHROME_RUNNER
+    - HOLOGRAM
+    - GLITCH_SPRITE
+    - COMPANION_UNIT
+    - RECON_DRONE
+    - MOTO_WOLF
+
+  TECH_HUB:
+    - ANDROID
+    - SYNTH
+    - HUMANOID_BOT
+    - AI_CONSTRUCT
+    - NANO_MECH
+    - COMPANION_UNIT
+    - ASSEMBLER
+    - RECON_DRONE
+    - HOLOGRAM
+    - REPLIKA
+
+  DATA_CENTER:
+    - AI_CONSTRUCT
+    - DATA_PHANTOM
+    - VIRUS_ENTITY
+    - GLITCH_SPRITE
+    - HOLOGRAM
+    - NANO_GOLEM
+    - ASSEMBLER
+    - SYNTH
+    - HUMANOID_BOT
+
+  FACTORY_FLOOR:
+    - MECH_GUARDIAN
+    - BATTLE_MECH
+    - SIEGE_MECH
+    - CARGO_DRONE
+    - NANO_GOLEM
+    - ASSEMBLER
+    - DISASSEMBLER
+    - HUMANOID_BOT
+    - SPIDER_WALKER
+
+  JUNKYARD:
+    - FERAL_CLONE
+    - SPIDER_WALKER
+    - MOTO_WOLF
+    - DISASSEMBLER
+    - RADIATION_MUTANT
+    - SWARM_CLOUD
+    - CARGO_DRONE
+    - NANO_GOLEM
+    - SCOUT_MECH
+
+  ORBITAL_STATION:
+    - STAR_DRIFTER
+    - NEBULA_ENTITY
+    - RECON_DRONE
+    - COMBAT_DRONE
+    - AI_CONSTRUCT
+    - ANDROID
+    - SYNTH
+    - SCOUT_MECH
+    - XENOMORPH
+
+  SPACE_DOCK:
+    - CARGO_DRONE
+    - MECH_GUARDIAN
+    - HOVER_TANK
+    - STAR_DRIFTER
+    - ANDROID
+    - HUMANOID_BOT
+    - BATTLE_MECH
+    - COMPANION_UNIT
+
+  ASTEROID_BELT:
+    - XENOMORPH
+    - VOID_CRAWLER
+    - STAR_DRIFTER
+    - NEBULA_ENTITY
+    - SCOUT_MECH
+    - NANO_MECH
+    - SWARM_CLOUD
+    - COMBAT_DRONE
+
+  UNDERCITY:
+    - CHROME_RUNNER
+    - STREET_SAMURAI
+    - FERAL_CLONE
+    - GENE_SPLICE
+    - ENFORCER
+    - MOTO_WOLF
+    - VIRUS_ENTITY
+    - GLITCH_SPRITE
+    - BIO_HYBRID
+    - STEALTH_DRONE
+
+  SEWER_NETWORK:
+    - FERAL_CLONE
+    - RADIATION_MUTANT
+    - BIO_HYBRID
+    - GENE_SPLICE
+    - SWARM_CLOUD
+    - DISASSEMBLER
+    - SPIDER_WALKER
+    - NANO_GOLEM
+
+  BLACK_MARKET:
+    - STREET_SAMURAI
+    - CHROME_RUNNER
+    - ENFORCER
+    - IRON_SURGEON
+    - STEALTH_DRONE
+    - ANDROID
+    - REPLIKA
+    - DATA_PHANTOM
+    - HOLOGRAM
+
+  SKYWAY:
+    - JET_RACER
+    - RECON_DRONE
+    - COMBAT_DRONE
+    - STEALTH_DRONE
+    - STAR_DRIFTER
+    - SYNTH
+    - ANDROID
+    - SCOUT_MECH
+
+  CLOUD_TOWER:
+    - AI_CONSTRUCT
+    - HOLOGRAM
+    - DATA_PHANTOM
+    - NEBULA_ENTITY
+    - RECON_DRONE
+    - SYNTH
+    - ANDROID
+    - TECHNO_MONK
+
+  WASTELAND:
+    - RADIATION_MUTANT
+    - FERAL_CLONE
+    - SPIDER_WALKER
+    - HOVER_TANK
+    - BATTLE_MECH
+    - XENOMORPH
+    - DISASSEMBLER
+    - MOTO_WOLF
+    - BIO_HYBRID
+
+  RADIATION_ZONE:
+    - RADIATION_MUTANT
+    - GENE_SPLICE
+    - BIO_HYBRID
+    - FERAL_CLONE
+    - SWARM_CLOUD
+    - NANO_GOLEM
+    - XENOMORPH
+    - VOID_CRAWLER
+
+  RUINS_SECTOR:
+    - XENOMORPH
+    - VOID_CRAWLER
+    - FERAL_CLONE
+    - SPIDER_WALKER
+    - SCOUT_MECH
+    - SWARM_CLOUD
+    - RADIATION_MUTANT
+    - DISASSEMBLER
+    - DATA_PHANTOM
+
+  VIRTUAL_REALM:
+    - AI_CONSTRUCT
+    - HOLOGRAM
+    - DATA_PHANTOM
+    - VIRUS_ENTITY
+    - GLITCH_SPRITE
+    - REPLIKA
+    - SYNTH
+    - NANO_MECH
+
+  CYBERSPACE:
+    - AI_CONSTRUCT
+    - DATA_PHANTOM
+    - VIRUS_ENTITY
+    - GLITCH_SPRITE
+    - HOLOGRAM
+    - NANO_MECH
+    - ASSEMBLER
+    - REPLIKA
+
+  NEURAL_NET:
+    - AI_CONSTRUCT
+    - DATA_PHANTOM
+    - VIRUS_ENTITY
+    - GLITCH_SPRITE
+    - TECHNO_MONK
+    - SYNTH
+    - HOLOGRAM
+    - NANO_MECH
+
+  HARBOR_DISTRICT:
+    - CARGO_DRONE
+    - MECH_GUARDIAN
+    - ANDROID
+    - ENFORCER
+    - HOVER_TANK
+    - COMPANION_UNIT
+    - HUMANOID_BOT
+    - BIO_HYBRID
+
+  AQUA_DOME:
+    - BIO_HYBRID
+    - GENE_SPLICE
+    - NEBULA_ENTITY
+    - NANO_GOLEM
+    - SYNTH
+    - COMPANION_UNIT
+    - HOLOGRAM
+    - ASSEMBLER
+
+  SUBMARINE_BAY:
+    - HOVER_TANK
+    - MECH_GUARDIAN
+    - SCOUT_MECH
+    - CARGO_DRONE
+    - ANDROID
+    - NANO_GOLEM
+    - SWARM_CLOUD
+    - BIO_HYBRID
+
+  POWER_PLANT:
+    - MECH_GUARDIAN
+    - BATTLE_MECH
+    - NANO_GOLEM
+    - ASSEMBLER
+    - DISASSEMBLER
+    - SWARM_CLOUD
+    - HUMANOID_BOT
+    - AI_CONSTRUCT
+
+  REACTOR_CORE:
+    - NANO_MECH
+    - SWARM_CLOUD
+    - NANO_GOLEM
+    - ASSEMBLER
+    - MECH_GUARDIAN
+    - AI_CONSTRUCT
+    - RADIATION_MUTANT
+    - GENE_SPLICE
+
+  RESEARCH_LAB:
+    - AI_CONSTRUCT
+    - SYNTH
+    - ANDROID
+    - GENE_SPLICE
+    - BIO_HYBRID
+    - IRON_SURGEON
+    - NANO_MECH
+    - TECHNO_MONK
+    - ASSEMBLER
+    - REPLIKA
+
+  MILITARY_BASE:
+    - BATTLE_MECH
+    - SIEGE_MECH
+    - COMBAT_DRONE
+    - HOVER_TANK
+    - ENFORCER
+    - MECH_GUARDIAN
+    - ANDROID
+    - STEALTH_DRONE
+    - SCOUT_MECH
+
+  SCRAPYARD:
+    - DISASSEMBLER
+    - SPIDER_WALKER
+    - FERAL_CLONE
+    - MOTO_WOLF
+    - SWARM_CLOUD
+    - NANO_GOLEM
+    - CARGO_DRONE
+    - RADIATION_MUTANT
+
+  GREENHOUSE_DOME:
+    - BIO_HYBRID
+    - GENE_SPLICE
+    - COMPANION_UNIT
+    - SYNTH
+    - NANO_GOLEM
+    - ASSEMBLER
+    - HOLOGRAM
+    - ANDROID
+
+  CRYO_VAULT:
+    - FERAL_CLONE
+    - GENE_SPLICE
+    - AI_CONSTRUCT
+    - NANO_GOLEM
+    - ANDROID
+    - SYNTH
+    - REPLIKA
+    - IRON_SURGEON
+
+  HOLO_ARENA:
+    - HOLOGRAM
+    - BATTLE_MECH
+    - COMBAT_DRONE
+    - ENFORCER
+    - STREET_SAMURAI
+    - ANDROID
+    - GLITCH_SPRITE
+    - MECH_GUARDIAN
+    - CHROME_RUNNER
+
+# =============================================================================
+# SUBTYPE MAP
+# =============================================================================
+
+subtype_map:
+
+  # --- ANDROID (biome variants) ---
+  ANDROID:
+    DEFAULT:
+      - CIVILIAN_MODEL
+      - WORKER_UNIT
+      - SERVICE_BOT
+      - PROTOTYPE_A
+    NEON_DISTRICT:
+      - NEON_ANDROID
+      - NIGHTLIFE_UNIT
+      - STREET_MODEL
+    RESEARCH_LAB:
+      - LAB_ANDROID
+      - TEST_SUBJECT
+      - EXPERIMENTAL_UNIT
+
+  SYNTH:
+    DEFAULT:
+      - BIO_SYNTH
+      - COMBAT_SYNTH
+      - STEALTH_SYNTH
+      - DEEP_SYNTH
+
+  HUMANOID_BOT:
+    DEFAULT:
+      - FACTORY_BOT
+      - HOUSEHOLD_BOT
+      - SECURITY_BOT
+      - MAINTENANCE_BOT
+
+  COMPANION_UNIT:
+    DEFAULT:
+      - THERAPY_UNIT
+      - GUARDIAN_COMPANION
+      - SOCIAL_UNIT
+      - PET_MODEL
+
+  REPLIKA:
+    DEFAULT:
+      - PERFECT_COPY
+      - GLITCH_COPY
+      - MIRROR_UNIT
+      - ECHO_MODEL
+
+  # --- MECH (biome variants) ---
+  MECH_GUARDIAN:
+    DEFAULT:
+      - CITY_GUARDIAN
+      - BORDER_SENTINEL
+      - TOWER_GUARD
+      - GATE_KEEPER
+    MILITARY_BASE:
+      - WAR_GUARDIAN
+      - FORTRESS_MECH
+      - COMMAND_GUARDIAN
+    FACTORY_FLOOR:
+      - ASSEMBLY_GUARDIAN
+      - LINE_SENTINEL
+
+  BATTLE_MECH:
+    DEFAULT:
+      - ASSAULT_MECH
+      - HEAVY_STRIKER
+      - JUGGERNAUT
+      - BERSERKER_MECH
+
+  SCOUT_MECH:
+    DEFAULT:
+      - RECON_MECH
+      - PATHFINDER
+      - SHADOW_SCOUT
+      - TERRAIN_SCANNER
+
+  SIEGE_MECH:
+    DEFAULT:
+      - DEMOLISHER
+      - WALL_BREAKER
+      - BOMBARDIER
+      - FORTRESS_BUSTER
+
+  NANO_MECH:
+    DEFAULT:
+      - MICRO_MECH
+      - REPAIR_MECH
+      - INFILTRATOR_MECH
+      - SWARM_MECH
+
+  # --- DRONE ---
+  RECON_DRONE:
+    DEFAULT:
+      - EYE_DRONE
+      - SCANNER_DRONE
+      - MAPPING_DRONE
+      - SURVEILLANCE_UNIT
+
+  COMBAT_DRONE:
+    DEFAULT:
+      - ATTACK_DRONE
+      - INTERCEPTOR
+      - GUNSHIP_DRONE
+      - KAMIKAZE_UNIT
+
+  CARGO_DRONE:
+    DEFAULT:
+      - HAULER_DRONE
+      - SUPPLY_DROP
+      - TRANSPORT_UNIT
+      - HEAVY_LIFTER
+
+  STEALTH_DRONE:
+    DEFAULT:
+      - GHOST_DRONE
+      - SHADOW_UNIT
+      - CLOAKED_DRONE
+      - SILENT_WING
+
+  # --- CYBORG (biome variants) ---
+  ENFORCER:
+    DEFAULT:
+      - RIOT_ENFORCER
+      - DISTRICT_OFFICER
+      - HEAVY_ENFORCER
+      - SHOCK_TROOPER
+    UNDERCITY:
+      - UNDERGROUND_ENFORCER
+      - TUNNEL_COP
+      - SEWER_PATROL
+
+  STREET_SAMURAI:
+    DEFAULT:
+      - BLADE_DANCER
+      - CHROME_RONIN
+      - NEON_WARRIOR
+      - CYBER_DUELIST
+
+  TECHNO_MONK:
+    DEFAULT:
+      - DATA_MONK
+      - CIRCUIT_SAGE
+      - NEURAL_ASCETIC
+      - BINARY_MYSTIC
+
+  CHROME_RUNNER:
+    DEFAULT:
+      - SPEED_RUNNER
+      - SHADOW_RUNNER
+      - DATA_COURIER
+      - GHOST_RUNNER
+
+  IRON_SURGEON:
+    DEFAULT:
+      - FIELD_SURGEON
+      - COMBAT_MEDIC
+      - CYBER_DOCTOR
+      - MOD_SPECIALIST
+
+  # --- DIGITAL ---
+  AI_CONSTRUCT:
+    DEFAULT:
+      - LOGIC_CORE
+      - NEURAL_MATRIX
+      - HEURISTIC_ENGINE
+      - SENTIENT_PROGRAM
+    VIRTUAL_REALM:
+      - VIRTUAL_ARCHITECT
+      - REALM_BUILDER
+      - WORLD_WEAVER
+    CYBERSPACE:
+      - NET_SPIDER
+      - CODE_WORM
+      - DATA_LEVIATHAN
+
+  HOLOGRAM:
+    DEFAULT:
+      - HARD_LIGHT
+      - PHANTOM_IMAGE
+      - PROJECTION_UNIT
+      - MIRAGE_FORM
+
+  DATA_PHANTOM:
+    DEFAULT:
+      - CORRUPTED_DATA
+      - GHOST_PROCESS
+      - ORPHAN_THREAD
+      - MEMORY_LEAK
+
+  VIRUS_ENTITY:
+    DEFAULT:
+      - TROJAN_FORM
+      - WORM_CLUSTER
+      - RANSOMWARE_BEAST
+      - ZERO_DAY
+
+  GLITCH_SPRITE:
+    DEFAULT:
+      - PIXEL_SPRITE
+      - ERROR_SPRITE
+      - STATIC_SPRITE
+      - ARTIFACT_SPRITE
+
+  # --- MUTANT ---
+  GENE_SPLICE:
+    DEFAULT:
+      - CHIMERA_SPLICE
+      - PREDATOR_SPLICE
+      - STEALTH_SPLICE
+      - AQUATIC_SPLICE
+
+  RADIATION_MUTANT:
+    DEFAULT:
+      - GLOWING_MUTANT
+      - HULK_MUTANT
+      - CRAWLER_MUTANT
+      - SHIFTER_MUTANT
+
+  BIO_HYBRID:
+    DEFAULT:
+      - PLANT_HYBRID
+      - INSECT_HYBRID
+      - REPTILE_HYBRID
+      - FUNGAL_HYBRID
+
+  FERAL_CLONE:
+    DEFAULT:
+      - ROGUE_CLONE
+      - DEGRADED_COPY
+      - FERAL_PACK
+      - ALPHA_CLONE
+
+  # --- VEHICLE ---
+  HOVER_TANK:
+    DEFAULT:
+      - LIGHT_HOVER
+      - HEAVY_HOVER
+      - SIEGE_HOVER
+      - RECON_HOVER
+
+  SPIDER_WALKER:
+    DEFAULT:
+      - LIGHT_WALKER
+      - HEAVY_WALKER
+      - SCOUT_WALKER
+      - SIEGE_WALKER
+
+  JET_RACER:
+    DEFAULT:
+      - STREET_RACER
+      - SKY_RACER
+      - ORBITAL_RACER
+      - STEALTH_RACER
+
+  MOTO_WOLF:
+    DEFAULT:
+      - PACK_RUNNER
+      - LONE_RIDER
+      - CHROME_WOLF
+      - GHOST_RIDER
+
+  # --- ALIEN ---
+  XENOMORPH:
+    DEFAULT:
+      - STALKER_XENO
+      - QUEEN_XENO
+      - DRONE_XENO
+      - WARRIOR_XENO
+    ASTEROID_BELT:
+      - VOID_XENO
+      - ROCK_BURROWER
+      - SPACE_HUNTER
+
+  VOID_CRAWLER:
+    DEFAULT:
+      - DEEP_CRAWLER
+      - SHADOW_CRAWLER
+      - HIVE_CRAWLER
+      - ALPHA_CRAWLER
+
+  STAR_DRIFTER:
+    DEFAULT:
+      - SOLAR_DRIFTER
+      - NEBULA_DRIFTER
+      - COMET_RIDER
+      - VOID_DRIFTER
+
+  NEBULA_ENTITY:
+    DEFAULT:
+      - GAS_FORM
+      - PLASMA_ENTITY
+      - STELLAR_BEING
+      - COSMIC_CLOUD
+
+  # --- NANO ---
+  SWARM_CLOUD:
+    DEFAULT:
+      - REPAIR_SWARM
+      - ATTACK_SWARM
+      - SCOUT_SWARM
+      - SHIELD_SWARM
+
+  NANO_GOLEM:
+    DEFAULT:
+      - IRON_GOLEM
+      - CARBON_GOLEM
+      - SILICON_GOLEM
+      - ALLOY_GOLEM
+
+  ASSEMBLER:
+    DEFAULT:
+      - MICRO_ASSEMBLER
+      - MACRO_ASSEMBLER
+      - FIELD_ASSEMBLER
+      - COMBAT_ASSEMBLER
+
+  DISASSEMBLER:
+    DEFAULT:
+      - SALVAGE_UNIT
+      - RECYCLER
+      - DECONSTRUCTOR
+      - ENTROPY_ENGINE
+
+# =============================================================================
+# ELEMENTS (12 futuristic)
+# =============================================================================
+
+elements:
+  - PLASMA
+  - EMP
+  - QUANTUM
+  - TOXIC
+  - CRYO
+  - LASER
+  - KINETIC
+  - GRAVITY
+  - SONIC
+  - NANO
+  - RADIATION
+  - DARK_ENERGY
+
+# =============================================================================
+# TEMPERAMENTS
+# =============================================================================
+
+temperaments:
+  - CALCULATED
+  - AGGRESSIVE
+  - DEFENSIVE
+  - CURIOUS
+  - ROGUE
+  - LOYAL
+  - CHAOTIC
+  - ADAPTIVE
+  - DORMANT
+  - VIGILANT
+
+# =============================================================================
+# SIZES
+# =============================================================================
+
+sizes:
+  - MICRO
+  - COMPACT
+  - STANDARD
+  - HEAVY
+  - MASSIVE
+  - TITAN
+
+# =============================================================================
+# VARIANT PREFIXES (25)
+# =============================================================================
+
+variants:
+  - CHROME_PLATED
+  - RUST_COVERED
+  - NEON_TRACED
+  - HOLOGRAPHIC
+  - STEALTH_COATED
+  - PLASMA_INFUSED
+  - BATTLE_SCARRED
+  - PROTOTYPE
+  - OVERCLOCKED
+  - QUANTUM_SHIFTED
+  - RADIATION_BURNED
+  - CRYO_SEALED
+  - VOID_TOUCHED
+  - EMP_HARDENED
+  - NANO_ENHANCED
+  - GOLD_CIRCUIT
+  - DARK_ALLOY
+  - CRYSTAL_CORE
+  - WIRE_WRAPPED
+  - SIGNAL_BOOSTED
+  - GLITCH_MARKED
+  - CARBON_FIBER
+  - TITANIUM_FRAME
+  - NEURAL_LINKED
+  - HOLOGRAM_SKINNED
+
+# =============================================================================
+# PRIMARY COLOURS
+# =============================================================================
+
+primary_colors:
+  - CHROME
+  - NEON_GREEN
+  - ELECTRIC_BLUE
+  - CRIMSON
+  - GRAPHITE
+  - TITANIUM
+  - COPPER
+  - GOLD
+  - HOLOGRAPHIC
+  - MIDNIGHT
+  - ARCTIC_WHITE
+  - TOXIC_GREEN
+  - PLASMA_PINK
+  - QUANTUM_PURPLE
+  - RUST_ORANGE
+  - VOID_BLACK
+
+# =============================================================================
+# SECONDARY COLOURS
+# =============================================================================
+
+secondary_colors:
+  - CARBON
+  - STEEL
+  - MATTE_BLACK
+  - GUNMETAL
+  - IVORY
+  - LED_WHITE
+  - CIRCUIT_GREEN
+  - WIRE_RED
+  - ALLOY_SILVER
+  - SMOKE
+  - ASH
+  - TARNISHED
+
+# =============================================================================
+# SIGILS
+# =============================================================================
+
+sigils:
+  - CIRCUIT
+  - GEAR
+  - BOLT
+  - ATOM
+  - BINARY
+  - CROSSHAIR
+  - SHIELD
+  - ANTENNA
+  - EYE
+  - CHIP
+  - SKULL
+  - POWER
+
+# =============================================================================
+# FRAME STYLES
+# =============================================================================
+
+frame_styles:
+  - INDUSTRIAL
+  - SLEEK
+  - MILITARY
+  - HOLOGRAPHIC
+  - CIRCUIT_BOARD
+  - NEON
+  - BRUTALIST
+  - QUANTUM
+
+# =============================================================================
+# TITLE GENERATION
+# =============================================================================
+
+roles:
+  - Commander
+  - Operative
+  - Sentinel
+  - Hacker
+  - Engineer
+  - Enforcer
+  - Scout
+  - Medic
+  - Architect
+  - Rebel
+  - Ghost
+  - Overseer
+  - Warden
+  - Scavenger
+  - Prophet
+
+domains:
+  - Neon Heights
+  - Silicon Depths
+  - Chrome Spires
+  - Dead Circuits
+  - Quantum Fields
+  - Rust Wastes
+  - Data Streams
+  - Iron District
+  - Plasma Core
+  - Void Sector
+  - Echo Networks
+  - Binary Falls
+  - Signal Hill
+  - Thunder Grid
+  - Cryo Vaults
+  - Carbon Flats
+  - Drone Skies
+  - Acid Rain Alley
+  - Zero Gravity
+  - Dark Subnet

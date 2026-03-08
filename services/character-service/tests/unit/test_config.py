@@ -170,3 +170,38 @@ class TestBiomeWeights:
         assert v2_config._species_ids == v1_config._species_ids
         assert v2_config.elements == v1_config.elements
         assert v2_config.rarity_weights == v1_config.rarity_weights
+
+
+class TestWorldTemplates:
+    """Verify world-flexible template configuration."""
+
+    def test_v1_default_id_prefix(self):
+        config = get_config()
+        assert config.id_prefix == "WF"
+
+    def test_v1_default_name_template(self):
+        config = get_config()
+        assert config.name_template == "{variant} {sub_type}"
+
+    def test_v1_default_title_template(self):
+        config = get_config()
+        assert config.title_template == "The {role} of {domain}"
+
+    def test_cyber_custom_id_prefix(self, cyber_config):
+        assert cyber_config.id_prefix == "CF"
+
+    def test_cyber_custom_title_template(self, cyber_config):
+        assert cyber_config.title_template == "{role} of {domain}"
+
+    def test_custom_templates_in_raw_config(self):
+        """Custom templates can be set in YAML and are parsed correctly."""
+        v1_path = os.environ["GENERATION_CONFIG_PATH"]
+        with open(v1_path) as f:
+            data = yaml.safe_load(f)
+        data["id_prefix"] = "TEST"
+        data["name_template"] = "{species} Unit {variant}"
+        data["title_template"] = "{role} — {domain}"
+        config = GenerationConfig(data)
+        assert config.id_prefix == "TEST"
+        assert config.name_template == "{species} Unit {variant}"
+        assert config.title_template == "{role} — {domain}"

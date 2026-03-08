@@ -38,6 +38,11 @@ class GenerationConfig:
         self.roles: list[str] = data["roles"]
         self.domains: list[str] = data["domains"]
 
+        # World-flexible presentation templates
+        self.id_prefix: str = data.get("id_prefix", "WF")
+        self.name_template: str = data.get("name_template", "{variant} {sub_type}")
+        self.title_template: str = data.get("title_template", "The {role} of {domain}")
+
         # Maps
         self.biome_species_map: dict[str, list[str]] = data["biome_species_map"]
         self.subtype_map: dict[str, dict[str, list[str]]] = data["subtype_map"]

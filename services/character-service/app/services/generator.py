@@ -120,18 +120,26 @@ def generate_creature(
         else:
             stats[stat_name] = stat_min
 
-    # Name and title
-    variant_display = variant.replace("_", " ").title()
-    sub_type_display = sub_type.replace("_", " ").title()
-    name = f"{variant_display} {sub_type_display}"
-    title = f"The {role} of {domain}"
+    # Name and title — using config templates
+    template_vars = {
+        "variant": variant.replace("_", " ").title(),
+        "sub_type": sub_type.replace("_", " ").title(),
+        "role": role,
+        "domain": domain,
+        "species": species.replace("_", " ").title(),
+        "biome": biome.replace("_", " ").title(),
+        "element": element.replace("_", " ").title(),
+        "rarity": rarity.replace("_", " ").title(),
+    }
+    name = config.name_template.format(**template_vars)
+    title = config.title_template.format(**template_vars)
 
     # Creature signature (for collision detection)
     signature = f"{rarity}|{biome}|{species}|{sub_type}|{element}|{size}|{temperament}|{variant}"
 
     # Creature ID — includes version and a hash fragment for uniqueness
     hash_fragment = seed[:4].hex().upper()
-    creature_id = f"WF-{config.version}-{rarity}-{biome}-{species}-{hash_fragment}"
+    creature_id = f"{config.id_prefix}-{config.version}-{rarity}-{biome}-{species}-{hash_fragment}"
 
     return CreatureCard(
         identity=Identity(
@@ -216,14 +224,22 @@ def generate_claimed_variant(
         else:
             stats[stat_name] = stat_min
 
-    variant_display = variant.replace("_", " ").title()
-    sub_type_display = sub_type.replace("_", " ").title()
-    name = f"{variant_display} {sub_type_display}"
-    title = f"The {role} of {domain}"
+    template_vars = {
+        "variant": variant.replace("_", " ").title(),
+        "sub_type": sub_type.replace("_", " ").title(),
+        "role": role,
+        "domain": domain,
+        "species": species.replace("_", " ").title(),
+        "biome": biome.replace("_", " ").title(),
+        "element": element.replace("_", " ").title(),
+        "rarity": "Common",
+    }
+    name = config.name_template.format(**template_vars)
+    title = config.title_template.format(**template_vars)
 
     signature = f"COMMON|{biome}|{species}|{sub_type}|{element}|{size}|{temperament}|{variant}"
     hash_fragment = seed[:4].hex().upper()
-    creature_id = f"WF-{config.version}-COMMON-{biome}-{species}-{hash_fragment}"
+    creature_id = f"{config.id_prefix}-{config.version}-COMMON-{biome}-{species}-{hash_fragment}"
 
     return CreatureCard(
         identity=Identity(

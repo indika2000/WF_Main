@@ -71,6 +71,18 @@ def v2_config():
     return GenerationConfig(data)
 
 
+# ── CyberFriends Config Fixture ───────────────────────────────────────────
+
+
+@pytest.fixture
+def cyber_config():
+    """Load CyberFriends test config as a standalone GenerationConfig."""
+    cyber_path = os.path.join(os.path.dirname(__file__), "fixtures", "generation_cyber_test.yml")
+    with open(cyber_path) as f:
+        data = yaml.safe_load(f)
+    return GenerationConfig(data)
+
+
 # ── Auth Fixtures ────────────────────────────────────────────────────────────
 
 
