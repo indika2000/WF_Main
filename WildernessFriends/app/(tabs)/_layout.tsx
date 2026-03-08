@@ -2,11 +2,17 @@ import { Tabs } from "expo-router";
 import { Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-function TabIcon({ source, color }: { source: any; color: string }) {
+function TabIcon({
+  source,
+  focused,
+}: {
+  source: any;
+  focused: boolean;
+}) {
   return (
     <Image
       source={source}
-      style={{ width: 26, height: 26, tintColor: color }}
+      style={{ width: 26, height: 26, opacity: focused ? 1 : 0.4 }}
       resizeMode="contain"
     />
   );
@@ -29,10 +35,10 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ focused }) => (
             <TabIcon
               source={require("../../assets/images/icons/home.png")}
-              color={color}
+              focused={focused}
             />
           ),
         }}
@@ -41,10 +47,10 @@ export default function TabsLayout() {
         name="collection"
         options={{
           title: "Collection",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ focused }) => (
             <TabIcon
               source={require("../../assets/images/icons/collection.png")}
-              color={color}
+              focused={focused}
             />
           ),
         }}
@@ -53,10 +59,10 @@ export default function TabsLayout() {
         name="character-creator"
         options={{
           title: "Creator",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ focused }) => (
             <TabIcon
               source={require("../../assets/images/icons/character_creator.png")}
-              color={color}
+              focused={focused}
             />
           ),
         }}
@@ -65,10 +71,10 @@ export default function TabsLayout() {
         name="marketplace"
         options={{
           title: "Market",
-          tabBarIcon: ({ color }) => (
+          tabBarIcon: ({ focused }) => (
             <TabIcon
               source={require("../../assets/images/icons/marketplace.png")}
-              color={color}
+              focused={focused}
             />
           ),
         }}

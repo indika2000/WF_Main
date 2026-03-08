@@ -30,7 +30,7 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={logout} className="p-2">
             <Image
               source={require("../../assets/images/icons/profile.png")}
-              style={{ width: 32, height: 32, tintColor: "#6B5B4F" }}
+              style={{ width: 32, height: 32 }}
               resizeMode="contain"
             />
           </TouchableOpacity>
