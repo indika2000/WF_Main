@@ -25,11 +25,11 @@ function RootLayoutNav() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar translucent backgroundColor="transparent" style="light" />
+      <StatusBar translucent backgroundColor="transparent" style="dark" />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: "#0F1A14" },
+          contentStyle: { backgroundColor: "#FAF7F2" },
         }}
       >
         <Stack.Screen name="index" options={{ gestureEnabled: false }} />

@@ -5,6 +5,22 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        parchment: {
+          DEFAULT: "#F5F0E8",
+          light: "#FAF7F2",
+          dark: "#E8E0D4",
+        },
+        bark: {
+          DEFAULT: "#6B5B4F",
+          light: "#8B7B6B",
+          dark: "#3B2F2F",
+        },
+        sage: {
+          DEFAULT: "#7B8F6B",
+          light: "#9AAD8A",
+          dark: "#5A6B4A",
+        },
+        // Keep old forest/earth tokens for dev-tools screens (unchanged)
         forest: {
           DEFAULT: "#1B3A2D",
           light: "#2D5A45",
@@ -15,18 +31,18 @@ module.exports = {
           light: "#B8941A",
           dark: "#6B5010",
         },
-        primary: "#0F1A14",
-        secondary: "#1A2E22",
+        primary: "#FAF7F2",
+        secondary: "#F5F0E8",
         text: {
-          primary: "#ffffff",
-          secondary: "#D4E8DA",
-          muted: "#7A9B88",
-          accent: "#8BB174",
+          primary: "#3B2F2F",
+          secondary: "#6B5B4F",
+          muted: "#9A8D82",
+          accent: "#5A6B4A",
         },
-        success: "#4CAF50",
-        error: "#E53935",
-        warning: "#FF9800",
-        info: "#29B6F6",
+        success: "#6B8F5A",
+        error: "#C45A4A",
+        warning: "#C4944A",
+        info: "#5A8FA0",
       },
     },
   },

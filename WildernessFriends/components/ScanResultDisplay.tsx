@@ -14,7 +14,7 @@ export default function ScanResultDisplay({
   if (results.length === 0) {
     return (
       <View className="mt-8 items-center">
-        <Ionicons name="scan-outline" size={48} color="#7A9B88" />
+        <Ionicons name="scan-outline" size={48} color="#9A8D82" />
         <Text className="text-text-muted mt-4 text-center">
           No scans yet. Tap the button above to scan a barcode or QR code.
         </Text>
@@ -25,7 +25,7 @@ export default function ScanResultDisplay({
   return (
     <View className="mt-6">
       <View className="flex-row justify-between items-center mb-3">
-        <Text className="text-white text-lg font-semibold">Scan Results</Text>
+        <Text className="text-text-primary text-lg font-semibold">Scan Results</Text>
         {onClear && (
           <TouchableOpacity onPress={onClear}>
             <Text className="text-error text-sm">Clear All</Text>
@@ -35,9 +35,9 @@ export default function ScanResultDisplay({
       {results.map((result, index) => (
         <View
           key={index}
-          className="bg-secondary rounded-lg p-4 mb-2 border border-forest"
+          className="bg-secondary rounded-lg p-4 mb-2 border border-parchment-dark"
         >
-          <Text className="text-white text-sm" selectable>
+          <Text className="text-text-primary text-sm" selectable>
             {result}
           </Text>
         </View>

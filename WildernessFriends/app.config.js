@@ -15,7 +15,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#1B3A2D",
+        backgroundColor: "#F5F0E8",
       },
       package: "com.wildernessfriends.app",
     },
@@ -32,7 +32,7 @@ export default {
           image: "./assets/images/splash.png",
           imageWidth: 200,
           resizeMode: "contain",
-          backgroundColor: "#1B3A2D",
+          backgroundColor: "#F5F0E8",
         },
       ],
       [

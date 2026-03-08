@@ -23,11 +23,11 @@ export default function Index() {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#0F1A14",
+        backgroundColor: "#FAF7F2",
       }}
     >
-      <ActivityIndicator size="large" color="#8BB174" />
-      <Text style={{ color: "#fff", marginTop: 10 }}>Loading...</Text>
+      <ActivityIndicator size="large" color="#7B8F6B" />
+      <Text style={{ color: "#3B2F2F", marginTop: 10 }}>Loading...</Text>
     </View>
   );
 }

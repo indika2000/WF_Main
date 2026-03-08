@@ -64,7 +64,7 @@ export default function ScannerScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <Ionicons name="camera-outline" size={64} color="#7A9B88" />
+          <Ionicons name="camera-outline" size={64} color="#9A8D82" />
           <Text style={styles.title}>Camera Access Required</Text>
           <Text style={styles.subtitle}>
             Please grant camera permission to scan barcodes and QR codes.
@@ -87,7 +87,7 @@ export default function ScannerScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centered}>
-          <Ionicons name="warning-outline" size={64} color="#E53935" />
+          <Ionicons name="warning-outline" size={64} color="#C45A4A" />
           <Text style={styles.title}>No Camera Found</Text>
           <Text style={styles.subtitle}>
             Could not find a camera device on this phone.
@@ -152,7 +152,7 @@ const CORNER_WIDTH = 4;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F1A14",
+    backgroundColor: "#FAF7F2",
   },
   centered: {
     flex: 1,
@@ -161,21 +161,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   title: {
-    color: "#fff",
+    color: "#3B2F2F",
     fontSize: 22,
     fontWeight: "bold",
     marginTop: 16,
     textAlign: "center",
   },
   subtitle: {
-    color: "#7A9B88",
+    color: "#9A8D82",
     fontSize: 14,
     marginTop: 8,
     textAlign: "center",
     lineHeight: 20,
   },
   button: {
-    backgroundColor: "#2D5A45",
+    backgroundColor: "#7B8F6B",
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 12,
@@ -191,11 +191,11 @@ const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#7A9B88",
+    borderColor: "#9A8D82",
     marginTop: 12,
   },
   cancelButtonText: {
-    color: "#7A9B88",
+    color: "#9A8D82",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     left: 0,
     borderTopWidth: CORNER_WIDTH,
     borderLeftWidth: CORNER_WIDTH,
-    borderColor: "#8BB174",
+    borderColor: "#7B8F6B",
     borderTopLeftRadius: 4,
   },
   topRight: {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     right: 0,
     borderTopWidth: CORNER_WIDTH,
     borderRightWidth: CORNER_WIDTH,
-    borderColor: "#8BB174",
+    borderColor: "#7B8F6B",
     borderTopRightRadius: 4,
   },
   bottomLeft: {
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     left: 0,
     borderBottomWidth: CORNER_WIDTH,
     borderLeftWidth: CORNER_WIDTH,
-    borderColor: "#8BB174",
+    borderColor: "#7B8F6B",
     borderBottomLeftRadius: 4,
   },
   bottomRight: {
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     right: 0,
     borderBottomWidth: CORNER_WIDTH,
     borderRightWidth: CORNER_WIDTH,
-    borderColor: "#8BB174",
+    borderColor: "#7B8F6B",
     borderBottomRightRadius: 4,
   },
   instructionContainer: {
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   instructionSubtext: {
-    color: "#D4E8DA",
+    color: "#E8E0D4",
     fontSize: 13,
     marginTop: 4,
     textShadowColor: "rgba(0, 0, 0, 0.8)",
