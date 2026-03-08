@@ -318,6 +318,22 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY
 ```
 The gateway's `firebase.js` config file handles the `\n` → newline conversion.
 
+### 40. Local MongoDB Blocks Docker Port 27017 on Windows
+
+A locally installed MongoDB service running on port 27017 silently intercepts connections meant for the Docker container. The Docker port mapping (`27017:27017`) either fails or the local MongoDB gets the connection instead — causing "Authentication failed" errors in Compass because the local instance has different (or no) credentials.
+
+**Fix:** Map the Docker MongoDB to a different host port in `docker-compose.dev.yml`:
+```yaml
+mongodb:
+  ports:
+    - "27018:27017"   # Host 27018 → Container 27017
+```
+Internal service communication is unaffected — services connect to `mongodb:27017` on the Docker network.
+
+**Compass connection string:** `mongodb://admin:wf-dev-mongo-2026@127.0.0.1:27018/?authSource=admin&directConnection=true`
+
+Use `127.0.0.1` (not `localhost`) to avoid Windows resolving to IPv6 `::1`.
+
 ---
 
 ## Quick Severity Reference
@@ -329,5 +345,5 @@ The gateway's `firebase.js` config file handles the `\n` → newline conversion.
 | **Silent misrouting** | #6, #8, #11 |
 | **Runtime crashes** | #10, #12, #13, #29, #30, #35 |
 | **Test failures** | #22, #23, #24, #25, #26, #27, #28, #31 |
-| **Dev workflow friction** | #9, #19, #34, #36 |
+| **Dev workflow friction** | #9, #19, #34, #36, #40 |
 | **Security considerations** | #14, #37, #38 |

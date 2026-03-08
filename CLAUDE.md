@@ -137,7 +137,8 @@ Card front artwork files follow the naming pattern: `card-front-{rarity}.png`
 
 ## Development — Backend
 - Start all services: `cd services && docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
-- Dev ports: Gateway 3000, LLM 5000, Image 5001, Permissions 5003, Commerce 3004, MongoDB 27017, Redis 6379
+- Dev ports: Gateway 3000, LLM 5000, Image 5001, Character 5002, Permissions 5003, Commerce 3004, MongoDB 27018 (host) → 27017 (container), Redis 6379
+- **MongoDB Compass connection:** `mongodb://admin:wf-dev-mongo-2026@127.0.0.1:27018/?authSource=admin&directConnection=true` — uses port 27018 because a local MongoDB instance occupies 27017. Use `127.0.0.1` (not `localhost`) to avoid Windows IPv6 resolution issues
 - Dev bypass auth: `Authorization: Bearer dev-bypass` (skips Firebase in non-production)
 - Hot-reload: gateway uses nodemon (watches src/), Python services use `uvicorn --reload`
 - Note: On Windows/Docker, nodemon may not detect volume-mounted file changes — restart the container with `docker-compose restart gateway` if needed

@@ -49,7 +49,7 @@ WildernessFriends is a collectible wildlife card mobile app built on a microserv
 | **Commerce** | 3004 | Python 3.12 | FastAPI | MongoDB + Redis | `commerce-service/Dockerfile` |
 | **Image** | 5001 | Python 3.12 | FastAPI | MongoDB + Local FS | `image-service/Dockerfile` |
 | **LLM** | 5000 | Python 3.12 | FastAPI | MongoDB | `llm-service/Dockerfile` |
-| **MongoDB** | 27017 | — | — | — | `mongo:7.0` |
+| **MongoDB** | 27018 (host) → 27017 (container) | — | — | — | `mongo:7.0` |
 | **Redis** | 6379 | — | — | — | `redis:7-alpine` |
 
 ## 3. Service Dependencies

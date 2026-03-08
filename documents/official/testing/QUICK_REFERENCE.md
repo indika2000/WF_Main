@@ -4,12 +4,13 @@
 
 | Service | Unit Tests | Integration Tests | Total | Framework |
 |---------|-----------|-------------------|-------|-----------|
+| **Character** | 53 | 86 | **160** | pytest + mongomock-motor |
 | **Permissions** | 26 | 20 | **46** | pytest + mongomock-motor |
 | **Commerce** | 37 | 37 | **74** | pytest + mongomock-motor + FakeRedis |
 | **LLM** | 35 | 24 | **59** | pytest + mongomock-motor |
 | **Image** | 24 | 20 | **44** | pytest + mongomock-motor |
 | **Gateway** | 11 | 11 | **22** | Jest + nock + supertest |
-| **Total** | **133** | **112** | **245** | |
+| **Total** | **186** | **198** | **405** | |
 
 ---
 
@@ -41,6 +42,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ./run-tests.sh --coverage
 
 # Single service
+./run-tests.sh --service character-service
 ./run-tests.sh --service permissions
 ./run-tests.sh --service commerce
 ./run-tests.sh --service llm-service
@@ -53,6 +55,9 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 #### Python Services (via docker-compose exec)
 
 ```bash
+# Character — 160 tests
+docker-compose exec -T character-service pytest tests/ -v --tb=short
+
 # Permissions — 46 tests
 docker-compose exec -T permissions pytest tests/ -v --tb=short
 
@@ -99,7 +104,7 @@ docker-compose exec -T gateway npm run test:integration
 
 ```powershell
 # Run all Python services + gateway in sequence
-@("permissions","llm-service","image-service","commerce") | ForEach-Object {
+@("character-service","permissions","llm-service","image-service","commerce") | ForEach-Object {
   Write-Host "`n=== Testing $_ ===" -ForegroundColor Yellow
   docker-compose exec -T $_ pytest tests/ -v --tb=short
 }
@@ -115,6 +120,22 @@ docker-compose exec -T gateway npm test
 services/
 ├── pytest.ini                           # Shared pytest config (asyncio_mode=auto)
 ├── run-tests.sh                         # Unified test runner script
+│
+├── character-service/tests/
+│   ├── conftest.py                      # MongoDB mock, auth, config fixtures (v1, v2, cyber)
+│   ├── fixtures/
+│   │   ├── generation_v2_test.yml       # Ocean-themed season test config
+│   │   └── generation_cyber_test.yml    # CyberFriends world test config
+│   ├── unit/
+│   │   ├── test_config.py              # 25 tests — loading, validation, weights, templates
+│   │   ├── test_generator.py           # 14 tests — determinism, rarity, constraints
+│   │   └── test_normalisation.py       # 14 tests — barcode format validation
+│   └── integration/
+│       ├── test_generate_routes.py     # 16 tests — API endpoints
+│       ├── test_registry.py            # 11 tests — DB persistence, collisions
+│       ├── test_barcode_stress.py      # 8 tests — 500-barcode stress
+│       ├── test_1000_barcodes.py       # 16 tests — 1000-barcode season tests
+│       └── test_cross_world.py         # 35 tests — 1000-barcode cross-world
 │
 ├── permissions-service/tests/
 │   ├── conftest.py                      # MongoDB mock, auth fixtures
