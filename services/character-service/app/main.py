@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import close_db, connect_db, init_indexes
-from app.routes import collection, creatures, generate, health, supply
+from app.routes import collection, creatures, generate, health, images, supply
 from shared.python.middleware import RequestLoggingMiddleware, global_exception_handler
 
 logging.basicConfig(
@@ -40,8 +40,21 @@ async def lifespan(app: FastAPI):
         len(config._species_ids),
     )
 
+    # Load artist personas
+    from app.services.artist_loader import load_artists
+
+    artist_registry = load_artists(settings.artists_config_path)
+    app.state.artist_registry = artist_registry
+    logger.info("Loaded %d artist personas", len(artist_registry.artists))
+
+    # Start background image worker
+    from app.services.image_worker import start_image_worker, stop_image_worker
+
+    start_image_worker(db)
+
     yield
 
+    stop_image_worker()
     await close_db(client)
     logger.info("Disconnected from MongoDB")
 
@@ -73,6 +86,7 @@ app.include_router(generate.router, tags=["Generate"])
 app.include_router(creatures.router, tags=["Creatures"])
 app.include_router(collection.router, tags=["Collection"])
 app.include_router(supply.router, tags=["Supply"])
+app.include_router(images.router, tags=["Images"])
 
 # Dev tools — only in development mode
 if settings.debug:

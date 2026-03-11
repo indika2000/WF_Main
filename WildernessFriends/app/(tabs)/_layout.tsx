@@ -80,6 +80,18 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              source={require("../../assets/images/icons/profile.png")}
+              focused={focused}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="(dev-tools)"
         options={{
           title: "Dev Tools",

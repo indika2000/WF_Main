@@ -30,6 +30,11 @@ class ImageGenConfig(BaseModel):
     quality: str = "standard"
     style: str | None = None
     n: int = 1
+    # Advanced options (Gemini Imagen)
+    aspect_ratio: str | None = None
+    negative_prompt: str | None = None
+    safety_filter_level: str | None = None
+    person_generation: str | None = None
 
 
 class ImageGenRequest(BaseModel):

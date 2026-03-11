@@ -50,10 +50,26 @@ async def check_usage(
     """Check if a user can use a metered feature.
 
     Handles period expiry reset, unlimited limits, and bonus calculation.
+    Auto-initializes usage record if user has the feature in their tier but
+    no usage record exists (handles features added after user creation).
     """
     doc = await db.feature_usage.find_one(
         {"user_id": user_id, "feature": feature}
     )
+    if not doc:
+        # Try auto-initializing from user's subscription tier
+        user_perms = await db.user_permissions.find_one({"user_id": user_id})
+        if user_perms:
+            sub = await db.subscriptions.find_one({"user_id": user_id})
+            tier = sub["tier"] if sub else "free"
+            tier_config = SUBSCRIPTION_TIERS.get(tier, {})
+            feature_limits = tier_config.get("feature_limits", {})
+            if feature in feature_limits:
+                await initialize_usage_for_tier(user_id, tier, db)
+                doc = await db.feature_usage.find_one(
+                    {"user_id": user_id, "feature": feature}
+                )
+
     if not doc:
         return {
             "user_id": user_id,

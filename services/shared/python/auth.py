@@ -37,7 +37,21 @@ async def get_current_user(
     Returns a user dict with uid, email, role, permissions.
     Service-to-service calls with API key get a service identity.
     """
-    # Check API key first (service-to-service)
+    # Check Bearer token first (user requests via gateway)
+    if credentials is not None:
+        try:
+            payload = verify_jwt(credentials.credentials)
+            return {
+                "uid": payload.get("uid", ""),
+                "email": payload.get("email", ""),
+                "role": payload.get("role", "user"),
+                "permissions": payload.get("permissions", {}),
+            }
+        except HTTPException:
+            # JWT invalid/expired — fall through to API key check
+            pass
+
+    # Fall back to API key (service-to-service calls without JWT)
     if verify_api_key(request):
         return {
             "uid": "service",
@@ -46,20 +60,10 @@ async def get_current_user(
             "permissions": {},
         }
 
-    # Check Bearer token
-    if credentials is None:
-        raise HTTPException(
-            status_code=401,
-            detail="Authorization header required",
-        )
-
-    payload = verify_jwt(credentials.credentials)
-    return {
-        "uid": payload.get("uid", ""),
-        "email": payload.get("email", ""),
-        "role": payload.get("role", "user"),
-        "permissions": payload.get("permissions", {}),
-    }
+    raise HTTPException(
+        status_code=401,
+        detail="Authorization header required",
+    )
 
 
 def require_role(role: str):

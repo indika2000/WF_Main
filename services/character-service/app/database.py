@@ -28,7 +28,7 @@ async def init_indexes(db: AsyncIOMotorDatabase) -> None:
     await db.source_registry.create_index("creature_id")
 
     # Creatures: lookup by creature_id, filter by rarity/season
-    await db.creatures.create_index("creature_id", unique=True)
+    await db.creatures.create_index("identity.creature_id", unique=True)
     await db.creatures.create_index("classification.rarity")
     await db.creatures.create_index("season")
     await db.creatures.create_index("claimed_by")
@@ -45,3 +45,10 @@ async def init_indexes(db: AsyncIOMotorDatabase) -> None:
     )
     await db.user_collections.create_index("user_id")
     await db.user_collections.create_index("creature_id")
+
+    # Image generation jobs: unique job_id, worker claim query, creature lookup
+    await db.image_generation_jobs.create_index("job_id", unique=True)
+    await db.image_generation_jobs.create_index(
+        [("status", 1), ("priority", 1), ("created_at", 1)]
+    )
+    await db.image_generation_jobs.create_index("creature_id")

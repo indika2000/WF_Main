@@ -1,0 +1,105 @@
+artists:
+  kaelith:
+    name: "Kaelith"
+    title: "The Verdant Illustrator"
+    style_directive: |
+      Art style by Kaelith: Soft watercolor rendering with luminous highlights
+      and dappled light. Organic flowing lines, visible brushstrokes, dreamy
+      ethereal atmosphere. Muted earth tones with bright natural accents.
+      Painterly and warm.
+    biome_affinities:
+      - FOREST
+      - DEEP_FOREST
+      - ENCHANTED_FOREST
+      - ANCIENT_FOREST
+      - BAMBOO_FOREST
+      - MUSHROOM_GROVE
+      - GRASSLAND
+      - SAVANNA
+      - RIVER
+      - LAKE
+      - WATERFALL
+      - JUNGLE
+      - RAINFOREST
+      - CANOPY
+    family_affinities:
+      - NATURE_SPIRIT
+      - SMALL_CREATURE
+      - BIRD
+    reference_images: []
+
+  thornforge:
+    name: "Thornforge"
+    title: "The Iron Chronicler"
+    style_directive: |
+      Art style by Thornforge: Heavy ink linework with rich saturated colors
+      and dramatic shadows. Strong contrast, textured surfaces with almost
+      tactile quality. Gritty and detailed with dark atmospheric tones and
+      sharp highlights. Bold and impactful with industrial precision.
+    biome_affinities:
+      - VOLCANIC_MOUNTAIN
+      - LAVA_FIELD
+      - RUINS
+      - CEMETERY
+      - BADLANDS
+      - MOUNTAIN
+      - HIGH_PEAK
+      - DESERT
+      - SAND_DUNE
+      - CAVE
+      - UNDERGROUND
+      - STEPPE
+    family_affinities:
+      - DRAGON
+      - BEAST
+      - UNDEAD
+      - CONSTRUCT
+    reference_images: []
+
+  solara:
+    name: "Solara"
+    title: "The Prism Weaver"
+    style_directive: |
+      Art style by Solara: Vibrant cel-shaded illustration with bold clean
+      color planes. Strong silhouettes, confident outlines, bright optimistic
+      palette. Dynamic composition with clean modern rendering. Stylized
+      proportions, sharp color transitions, minimal texture.
+    biome_affinities:
+      - SKY_REALM
+      - CLOUD_PEAKS
+      - ISLAND
+      - COAST
+      - CLIFF
+      - OASIS
+      - CORAL_REEF
+    family_affinities:
+      - HUMANOID
+      - MYTHIC
+      - INSECTOID
+    reference_images: []
+
+  mistweaver:
+    name: "Mistweaver"
+    title: "The Depth Painter"
+    style_directive: |
+      Art style by Mistweaver: Atmospheric realism with moody cinematic
+      lighting. Volumetric fog, subsurface scattering, deep rich color palette.
+      Dominated by blues, teals, and purples with chiaroscuro lighting.
+      Mysterious and immersive with environmental depth.
+    biome_affinities:
+      - OCEAN
+      - DEEP_OCEAN
+      - SWAMP
+      - MANGROVE_SWAMP
+      - BOG
+      - CAVE
+      - CRYSTAL_CAVE
+      - GLACIER
+      - FROZEN_TUNDRA
+      - ICE_CAVE
+      - SNOWLAND
+      - VOID
+    family_affinities:
+      - AQUATIC
+      - REPTILE
+    reference_images: []

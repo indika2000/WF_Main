@@ -81,11 +81,23 @@ router.use(
   createServiceProxy('commerce', SERVICE_CONFIG.commerce)
 );
 
-// Image Service proxy (Phase 2 — active)
+// Image Service proxy — skip auth for file-serving paths
+// (React Native <Image> component cannot send auth headers)
 router.use(
   '/images',
-  authMiddleware,
+  (req, res, next) => {
+    if (/^\/[^/]+\/file(\/|$)/.test(req.path)) {
+      return next('route');
+    }
+    authMiddleware(req, res, next);
+  },
   permissionsMiddleware,
+  createServiceProxy('images', SERVICE_CONFIG.images)
+);
+
+// Image file serving fallback — no auth required
+router.use(
+  '/images',
   createServiceProxy('images', SERVICE_CONFIG.images)
 );
 
@@ -111,6 +123,14 @@ router.use(
   authMiddleware,
   permissionsMiddleware,
   createServiceProxy('characters', SERVICE_CONFIG.characters)
+);
+
+// Usage proxy (→ Permissions Service /usage/*)
+router.use(
+  '/usage',
+  authMiddleware,
+  permissionsMiddleware,
+  createServiceProxy('usage', SERVICE_CONFIG.usage)
 );
 
 module.exports = router;

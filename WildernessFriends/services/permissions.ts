@@ -1,5 +1,5 @@
 import api from "./api";
-import type { UserPermissions } from "../types";
+import type { UserPermissions, UsageCheckResponse, FeatureUsage } from "../types";
 
 /**
  * Permissions Service SDK
@@ -15,4 +15,21 @@ export async function checkPermission(
   permission: string
 ): Promise<{ allowed: boolean }> {
   return api.get(`/permissions/${userId}/check/${permission}`);
+}
+
+// ===== Usage =====
+// Gateway path: /api/usage/* → Permissions Service /usage/*
+
+export async function getUsage(
+  userId: string,
+  feature: string
+): Promise<FeatureUsage> {
+  return api.get(`/usage/${userId}/${feature}`);
+}
+
+export async function checkUsage(
+  userId: string,
+  feature: string
+): Promise<UsageCheckResponse> {
+  return api.post(`/usage/${userId}/${feature}/check`);
 }

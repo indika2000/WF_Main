@@ -7,10 +7,12 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 
 export default function HomeScreen() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const router = useRouter();
 
   return (
     <ImageBackground
@@ -27,7 +29,10 @@ export default function HomeScreen() {
             </Text>
             <Text className="text-text-muted text-sm">{user?.email}</Text>
           </View>
-          <TouchableOpacity onPress={logout} className="p-2">
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/profile")}
+            className="p-2"
+          >
             <Image
               source={require("../../assets/images/icons/profile.png")}
               style={{ width: 32, height: 32 }}

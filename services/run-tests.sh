@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       echo "Usage: $0 [--unit] [--integration] [--coverage] [--service <name>]"
       echo ""
-      echo "Services: permissions, llm-service, image-service, commerce, gateway"
+      echo "Services: permissions, llm-service, image-service, commerce, character, gateway"
       exit 0
       ;;
     *) echo "Unknown flag: $1"; exit 1 ;;
@@ -36,7 +36,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # --- Config ---
-PYTHON_SERVICES=("permissions" "llm-service" "image-service" "commerce")
+PYTHON_SERVICES=("permissions" "llm-service" "image-service" "commerce" "character")
 RESULTS=()
 FAILURES=0
 

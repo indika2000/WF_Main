@@ -13,10 +13,12 @@ SUBSCRIPTION_TIERS: dict = {
             "advanced_search": False,
             "unlimited_storage": False,
             "priority_support": False,
+            "character_creation": True,
         },
         "feature_limits": {
             "ai_text_generation": 10,
             "ai_image_generation": 0,
+            "character_creation": 5,
         },
     },
     "premium": {
@@ -29,10 +31,12 @@ SUBSCRIPTION_TIERS: dict = {
             "advanced_search": True,
             "unlimited_storage": False,
             "priority_support": False,
+            "character_creation": True,
         },
         "feature_limits": {
             "ai_text_generation": 100,
             "ai_image_generation": 25,
+            "character_creation": 25,
         },
     },
     "ultra": {
@@ -45,10 +49,12 @@ SUBSCRIPTION_TIERS: dict = {
             "advanced_search": True,
             "unlimited_storage": True,
             "priority_support": True,
+            "character_creation": True,
         },
         "feature_limits": {
             "ai_text_generation": -1,  # Unlimited
             "ai_image_generation": -1,  # Unlimited
+            "character_creation": 50,
         },
     },
 }

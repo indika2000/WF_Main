@@ -8,6 +8,9 @@ os.environ["SERVICE_NAME"] = "character-test"
 os.environ["GENERATION_CONFIG_PATH"] = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "config", "generation_v1.yml"
 )
+os.environ["ARTISTS_CONFIG_PATH"] = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "config", "artists.yml"
+)
 
 import yaml
 import jwt as pyjwt
@@ -16,6 +19,7 @@ from httpx import ASGITransport, AsyncClient
 from mongomock_motor import AsyncMongoMockClient
 
 from app.main import app
+from app.services.artist_loader import load_artists
 from app.services.config_loader import GenerationConfig, load_config
 
 
@@ -36,6 +40,8 @@ async def test_db():
     await db.supply_counters.create_index(
         [("counter_key", 1), ("season", 1)], unique=True
     )
+    await db.image_generation_jobs.create_index("job_id", unique=True)
+    await db.image_generation_jobs.create_index("creature_id")
     yield db
     client.close()
 
@@ -57,6 +63,13 @@ def load_generation_config():
     """Ensure generation config is loaded for every test."""
     config_path = os.environ["GENERATION_CONFIG_PATH"]
     load_config(config_path)
+
+
+@pytest.fixture(autouse=True)
+def load_artist_config():
+    """Ensure artist config is loaded for every test."""
+    artists_path = os.environ["ARTISTS_CONFIG_PATH"]
+    load_artists(artists_path)
 
 
 # ── v2 Config Fixture ───────────────────────────────────────────────────────

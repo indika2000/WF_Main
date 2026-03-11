@@ -10,11 +10,13 @@ from app.models.registry import GenerationRequest
 from app.services.config_loader import get_config
 from app.services.generator import generate_creature, generate_claimed_variant
 from app.services.normalisation import NormalisationError, normalise, build_canonical_id
+from app.services.image_jobs import ensure_image_jobs
 from app.services.registry import (
     add_to_collection,
     check_existing_source,
     register_creature,
 )
+from app.services.usage_client import check_character_usage, record_character_usage
 from shared.python.auth import get_current_user
 from shared.python.responses import error_response, success_response
 
@@ -62,7 +64,7 @@ async def generate(
         )
 
         if existing and existing.get("claimed_by") == user_id:
-            # Same user scanning again — return their creature
+            # Same user scanning again — return their creature (no usage cost)
             added = await add_to_collection(
                 db, user_id, existing["creature_id"], canonical_id
             )
@@ -78,7 +80,16 @@ async def generate(
                 message="Creature already in your collection",
             )
         else:
-            # Different user — they get a Common variant
+            # Different user — costs a use, they get a Common variant
+            # Step 2b: Check usage before generating variant
+            usage_check = await check_character_usage(user_id)
+            if not usage_check.get("allowed"):
+                return error_response(
+                    message="Monthly character creation limit reached",
+                    error_code="USAGE_LIMIT_REACHED",
+                    status_code=429,
+                )
+
             config = get_config()
             variant_creature = generate_claimed_variant(
                 code_type=body.code_type,
@@ -99,17 +110,33 @@ async def generate(
                 variant_creature.source.canonical_id,
             )
 
+            # Record usage after successful generation
+            usage_result = await record_character_usage(user_id)
+
+            # Trigger image generation in background
+            await ensure_image_jobs(db, variant_creature, user_id)
+
             return success_response(
                 data={
                     "creature": variant_creature.to_db_dict(),
                     "is_owner": True,
                     "is_new_discovery": True,
                     "is_claimed_variant": True,
+                    "usage": usage_result,
                 },
                 message="This barcode was already claimed — you received a Common variant",
             )
 
-    # Step 3: New barcode — generate and register
+    # Step 3: Check usage before generating new creature
+    usage_check = await check_character_usage(user_id)
+    if not usage_check.get("allowed"):
+        return error_response(
+            message="Monthly character creation limit reached",
+            error_code="USAGE_LIMIT_REACHED",
+            status_code=429,
+        )
+
+    # Step 4: New barcode — generate and register
     config = get_config()
     creature = generate_creature(
         code_type=body.code_type,
@@ -125,6 +152,12 @@ async def generate(
         db, user_id, creature.identity.creature_id, canonical_id
     )
 
+    # Record usage after successful generation
+    usage_result = await record_character_usage(user_id)
+
+    # Trigger image generation in background
+    await ensure_image_jobs(db, creature, user_id)
+
     logger.info(
         "New creature generated: %s (%s) for user %s",
         creature.identity.creature_id,
@@ -138,6 +171,7 @@ async def generate(
             "is_owner": True,
             "is_new_discovery": True,
             "is_claimed_variant": False,
+            "usage": usage_result,
         },
         message=f"New {creature.classification.rarity} creature discovered!",
     )

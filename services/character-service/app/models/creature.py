@@ -56,6 +56,15 @@ class Identity(BaseModel):
     creature_signature: str  # "RARE|FOREST|ELF|GROVE_ELF|EARTH|MEDIUM|CAUTIOUS|MOSSBOUND"
 
 
+class CreatureImages(BaseModel):
+    """Image references for a creature — populated asynchronously by image worker."""
+
+    card: Optional[str] = None  # Image service ID for card artwork
+    headshot_color: Optional[str] = None  # Image service ID for color headshot
+    headshot_pencil: Optional[str] = None  # Image service ID for pencil sketch
+    artist_id: Optional[str] = None  # Artist persona used for generation
+
+
 class CreatureCard(BaseModel):
     """The complete creature definition — global, one per creature_id."""
 
@@ -65,7 +74,7 @@ class CreatureCard(BaseModel):
     presentation: Presentation
     attributes: Attributes
     season: str = "v1"
-    image_id: Optional[str] = None
+    images: CreatureImages = Field(default_factory=CreatureImages)
     claimed_by: Optional[str] = None
     claimed_at: Optional[datetime] = None
     status: str = "unclaimed"  # "unclaimed", "claimed", "released"

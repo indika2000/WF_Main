@@ -114,12 +114,27 @@ async def generate_image(
     if not provider:
         raise ValueError("No image provider available")
 
+    # Build kwargs for advanced provider features (Gemini Imagen)
+    extra_kwargs: dict[str, Any] = {}
+    for key in (
+        "aspect_ratio",
+        "negative_prompt",
+        "safety_filter_level",
+        "person_generation",
+        "style_reference_images",
+        "style_description",
+        "subject_reference_images",
+    ):
+        if config.get(key) is not None:
+            extra_kwargs[key] = config[key]
+
     try:
         results = await provider.generate(
             prompt=prompt,
             size=config.get("size", "1024x1024"),
             quality=config.get("quality", "standard"),
             n=config.get("n", 1),
+            **extra_kwargs,
         )
         return {
             "images": results,
@@ -139,6 +154,7 @@ async def generate_image(
             size=config.get("size", "1024x1024"),
             quality=config.get("quality", "standard"),
             n=config.get("n", 1),
+            **extra_kwargs,
         )
         return {
             "images": results,

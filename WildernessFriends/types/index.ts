@@ -246,6 +246,26 @@ export interface Conversation {
   updated_at: string;
 }
 
+// ===== Usage =====
+
+export interface FeatureUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+  bonus: number;
+  period_start: string;
+  period_end: string;
+}
+
+export interface UsageCheckResponse {
+  allowed: boolean;
+  used: number;
+  limit: number;
+  remaining: number;
+  bonus: number;
+  reason?: string;
+}
+
 // ===== Characters =====
 
 export interface CreatureIdentity {
@@ -290,6 +310,13 @@ export interface CreatureAttributes {
   luck: number;
 }
 
+export interface CreatureImages {
+  card?: string;
+  headshot_color?: string;
+  headshot_pencil?: string;
+  artist_id?: string;
+}
+
 export interface CreatureCard {
   identity: CreatureIdentity;
   source: CreatureSource;
@@ -297,7 +324,7 @@ export interface CreatureCard {
   presentation: CreaturePresentation;
   attributes: CreatureAttributes;
   season: string;
-  image_id?: string;
+  images: CreatureImages;
   claimed_by?: string;
   claimed_at?: string;
   status: string;
@@ -311,6 +338,7 @@ export interface GenerateCreatureResponse {
   is_owner: boolean;
   is_new_discovery: boolean;
   is_claimed_variant: boolean;
+  usage?: FeatureUsage;
 }
 
 export interface SupplyTier {

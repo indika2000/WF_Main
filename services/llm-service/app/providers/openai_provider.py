@@ -72,6 +72,7 @@ class OpenAIImageProvider:
         size: str = "1024x1024",
         quality: str = "standard",
         n: int = 1,
+        **kwargs: Any,
     ) -> list[dict[str, Any]]:
         response = await self.client.images.generate(
             model=self.model,

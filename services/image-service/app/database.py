@@ -25,7 +25,6 @@ async def get_db(request: Request) -> AsyncIOMotorDatabase:
 
 async def init_indexes(db: AsyncIOMotorDatabase) -> None:
     """Create indexes for image service collections."""
-    await db.images.create_index("id", unique=True)
     await db.images.create_index("user_id")
     await db.images.create_index([("user_id", 1), ("category", 1)])
     await db.images.create_index("tags")

@@ -53,16 +53,20 @@ class TestEAN13:
     def test_strips_whitespace(self):
         assert normalise_ean_13("  5012345678900  ") == "5012345678900"
 
+    def test_12_digit_upc_a_auto_converted(self):
+        """12-digit UPC-A values are auto-converted to EAN-13 by prepending '0'."""
+        assert normalise_ean_13("012345678905") == "0012345678905"
+
     def test_too_short(self):
-        with pytest.raises(NormalisationError, match="exactly 13 digits"):
-            normalise_ean_13("501234567890")
+        with pytest.raises(NormalisationError, match="12-13 digits"):
+            normalise_ean_13("50123456789")
 
     def test_too_long(self):
-        with pytest.raises(NormalisationError, match="exactly 13 digits"):
+        with pytest.raises(NormalisationError, match="12-13 digits"):
             normalise_ean_13("50123456789001")
 
     def test_non_digits(self):
-        with pytest.raises(NormalisationError, match="exactly 13 digits"):
+        with pytest.raises(NormalisationError, match="12-13 digits"):
             normalise_ean_13("501234567890X")
 
 
@@ -124,3 +128,15 @@ class TestCanonicalId:
         a = build_canonical_id("EAN_13", "5012345678900")
         b = build_canonical_id("EAN_13", "5012345678901")
         assert a != b
+
+    def test_upc_a_and_ean_13_same_barcode_same_canonical(self):
+        """A UPC-A barcode detected as EAN_13 should produce the same
+        canonical_id as when detected as UPC_A, after normalisation.
+        Both mobile code_types now map to EAN_13, so the normaliser
+        must convert 12-digit UPC-A to 13-digit EAN-13."""
+        upc_value = "012345678905"
+        ean_value = "0012345678905"  # same barcode, EAN-13 format
+        normalised_from_12 = normalise("EAN_13", upc_value)
+        normalised_from_13 = normalise("EAN_13", ean_value)
+        assert normalised_from_12 == normalised_from_13
+        assert build_canonical_id("EAN_13", normalised_from_12) == build_canonical_id("EAN_13", normalised_from_13)

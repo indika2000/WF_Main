@@ -144,3 +144,36 @@ class TestUsageService:
         result = await check_usage("user123", "ai_text_generation", db)
         assert result["allowed"] is True
         assert result["remaining"] == -1
+
+    @pytest.mark.asyncio
+    async def test_character_creation_free_tier(self, db):
+        await create_default_permissions("user123", db)
+        result = await check_usage("user123", "character_creation", db)
+        assert result["allowed"] is True
+        assert result["limit"] == 5
+        assert result["remaining"] == 5
+
+    @pytest.mark.asyncio
+    async def test_character_creation_free_limit(self, db):
+        await create_default_permissions("user123", db)
+        for _ in range(5):
+            await record_usage("user123", "character_creation", db)
+        result = await check_usage("user123", "character_creation", db)
+        assert result["allowed"] is False
+        assert result["remaining"] == 0
+
+    @pytest.mark.asyncio
+    async def test_character_creation_premium_tier(self, db):
+        await create_default_permissions("user123", db)
+        await sync_permissions_to_tier("user123", "premium", db)
+        result = await check_usage("user123", "character_creation", db)
+        assert result["allowed"] is True
+        assert result["limit"] == 25
+
+    @pytest.mark.asyncio
+    async def test_character_creation_ultra_tier(self, db):
+        await create_default_permissions("user123", db)
+        await sync_permissions_to_tier("user123", "ultra", db)
+        result = await check_usage("user123", "character_creation", db)
+        assert result["allowed"] is True
+        assert result["limit"] == 50

@@ -76,7 +76,6 @@ async def get_image_metadata(
 async def serve_image_file(
     image_id: str,
     request: Request,
-    current_user: dict = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """Serve the original image file."""
@@ -109,7 +108,6 @@ async def serve_image_variant(
     image_id: str,
     variant: str,
     request: Request,
-    current_user: dict = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ):
     """Serve a processed image variant (thumb, medium, large)."""

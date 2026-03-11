@@ -22,11 +22,19 @@ def normalise_upc_a(raw_value: str) -> str:
 
 
 def normalise_ean_13(raw_value: str) -> str:
-    """Normalise an EAN-13 barcode (13 digits, leading zeros preserved)."""
+    """Normalise an EAN-13 barcode (13 digits, leading zeros preserved).
+
+    Also accepts 12-digit UPC-A values and converts them to EAN-13
+    by prepending '0'. This ensures consistent canonical_id generation
+    regardless of whether the scanner detected UPC-A or EAN-13.
+    """
     value = raw_value.strip()
+    if re.match(r"^\d{12}$", value):
+        # UPC-A detected as EAN_13 — convert to EAN-13 format
+        value = "0" + value
     if not re.match(r"^\d{13}$", value):
         raise NormalisationError(
-            f"EAN-13 must be exactly 13 digits, got '{raw_value}'"
+            f"EAN-13 must be 12-13 digits, got '{raw_value}'"
         )
     return value
 

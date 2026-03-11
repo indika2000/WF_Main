@@ -26,8 +26,13 @@ const SERVICE_CONFIG = {
   },
   characters: {
     url: process.env.CHARACTER_SERVICE_URL || 'http://character:5002',
-    timeout: 30000,
+    timeout: 300000,  // 5 min — SSE image streams can be long-lived
     pathPrefix: '',  // Character routes are /generate, /creatures/*, /collection/*, /supply
+  },
+  usage: {
+    url: process.env.PERMISSIONS_SERVICE_URL || 'http://permissions:5003',
+    timeout: 10000,
+    pathPrefix: '/usage',  // Usage routes on permissions service at /usage/*
   },
 };
 

@@ -40,6 +40,15 @@ class ImageProvider(Protocol):
         size: str = "1024x1024",
         quality: str = "standard",
         n: int = 1,
+        **kwargs: Any,
     ) -> list[dict[str, Any]]:
-        """Generate images. Returns list of {data (base64), format, size}."""
+        """Generate images. Returns list of {data (base64), format, size}.
+
+        Optional kwargs for advanced providers:
+            aspect_ratio: str — e.g. "3:4", "1:1" (Gemini Imagen)
+            negative_prompt: str — elements to exclude (Gemini Imagen)
+            style_reference_images: list[bytes] — style ref images (Gemini Imagen)
+            style_description: str — style description for refs (Gemini Imagen)
+            subject_reference_images: list[bytes] — subject ref images (Gemini Imagen)
+        """
         ...
