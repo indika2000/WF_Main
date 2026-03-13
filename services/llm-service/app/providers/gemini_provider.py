@@ -190,6 +190,14 @@ class GeminiImageProvider:
             config=config,
         )
 
+        if not response.generated_images:
+            logger.warning(
+                "Gemini returned no images (safety filter blocked). "
+                "Prompt (first 200 chars): %s",
+                prompt[:200],
+            )
+            raise RuntimeError("Gemini blocked image generation (safety filter)")
+
         results = []
         for img in response.generated_images:
             results.append({

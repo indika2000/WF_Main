@@ -129,42 +129,31 @@ def build_card_prompt(creature: CreatureCard, artist: ArtistConfig) -> str:
 
 
 def build_headshot_color_prompt(creature: CreatureCard, artist: ArtistConfig) -> str:
-    """Build prompt for a color headshot (1:1 square, bust framing).
-
-    The card image should be passed as a SubjectReferenceImage separately.
-    """
+    """Build prompt for a color headshot (1:1 square, bust framing)."""
     c = creature.classification
     p = creature.presentation
 
     return (
-        f"Portrait headshot of a {c.variant} {c.sub_type}, "
-        f"a {c.species} creature.\n"
+        f"Portrait headshot illustration of a {c.variant} {c.sub_type}, "
+        f"a {c.species} creature from the {c.biome}.\n"
         f"Bust framing showing head and upper body only.\n"
-        f"Same character as the reference — maintain exact features, "
-        f"markings, and coloring.\n"
         f"Dominant colors: {p.primary_color} and {p.secondary_color}.\n"
-        f"You should use the following artist style directive ensuring that line art is consistent, and keeping to the artist's style: {artist.style_directive}\n"
-        f"Clean background, portrait orientation.\n"
+        f"Temperament: {c.temperament}.\n"
+        f"{artist.style_directive}\n"
+        f"Clean simple background, square format.\n"
         f"Do not include any text or decorative elements."
     )
 
 
 def build_headshot_pencil_prompt(creature: CreatureCard) -> str:
-    """Build prompt for a pencil sketch headshot (1:1 square, bust framing).
-
-    The card image should be passed as a SubjectReferenceImage separately.
-    No artist style directive — pencil style is explicit in the prompt.
-    """
+    """Build prompt for a pencil sketch headshot (1:1 square, bust framing)."""
     c = creature.classification
 
     return (
-        f"Detailed pencil line art sketch of a {c.variant} {c.sub_type}, "
+        f"Pencil sketch portrait of a {c.variant} {c.sub_type}, "
         f"a {c.species} creature.\n"
         f"Bust framing showing head and upper body only.\n"
-        f"Same character as the reference — maintain EXACT features, "
-        f"markings, and proportions.\n"
-        f"Black and white pencil drawing, clean line art with "
-        f"cross-hatching for shading.\n"
-        f"No color, no background, the image should only show thehead sketch, and it should look like a rough pencil sketch. On a white background\n"
-        f"Do NOT include any text, decorative elements, borders, or any other image artifacts other than the pencil sketch itself."
+        f"Black and white pencil drawing with cross-hatching for shading. "
+        f"Clean line art, rough sketch style on a plain white background.\n"
+        f"Do not include any text, borders, or decorative elements."
     )
