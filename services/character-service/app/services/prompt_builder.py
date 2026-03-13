@@ -16,11 +16,11 @@ RARITY_DIRECTIVES = {
     "RARE": "detailed illustration with multiple visual elements and rich textures",
     "EPIC": (
         "highly detailed with layered visual effects, dynamic lighting, "
-        "and intricate patterns"
+        "and intricate patterns but keeping to the artist's style"
     ),
     "LEGENDARY": (
         "extraordinarily detailed, multiple visual layers, luminous magical effects, "
-        "cinematic quality, every surface has rich texture and detail"
+        "cinematic quality, every surface has rich texture and detail but keeping to the artist's style"
     ),
 }
 
@@ -111,20 +111,20 @@ def build_card_prompt(creature: CreatureCard, artist: ArtistConfig) -> str:
     rarity_directive = RARITY_DIRECTIVES.get(c.rarity, RARITY_DIRECTIVES["COMMON"])
 
     return (
-        f"Create a collectible fantasy trading card illustration of a "
+        f"Create an illustration and only an illustration of the following character and it's environment:\n\n "
         f"{c.size} {c.variant} {c.sub_type}.\n\n"
         f"This {c.species} dwells in the {c.biome} and channels {c.element} energy. "
         f"Its temperament is {c.temperament}.\n\n"
-        f"Visual characteristics:\n"
+        f"with Visual characteristics with should shape the character image:\n"
         f"- Dominant colors: {p.primary_color} and {p.secondary_color}\n"
         f"- Build: {build}\n"
         f"- Expression: {expression}\n"
         f"- Magical presence: {magical}\n"
         f"- Distinctive features: {distinctive}\n\n"
-        f"Rarity: {c.rarity} — {rarity_directive}\n\n"
-        f"{artist.style_directive}\n\n"
-        f"Full body portrait, centered composition, contextual {c.biome} background.\n"
-        f"Do not include any text, borders, frames, or card elements — character only."
+        f"And it's Rarity which should help further define the character uniqueness: {c.rarity} — {rarity_directive}\n\n"
+        f"You should use the following artist style directive ensuring that line art is consistent, and keeping to the artist's style: {artist.style_directive}\n\n"
+        f"This image should be a Full body portrait, centered composition, contextual {c.biome} background again with the artist's style in mind.\n"
+        f"DO NOT include any text, borders, frames, or card elements in the image, this is really important — character and background ONLY."
     )
 
 
@@ -143,7 +143,7 @@ def build_headshot_color_prompt(creature: CreatureCard, artist: ArtistConfig) ->
         f"Same character as the reference — maintain exact features, "
         f"markings, and coloring.\n"
         f"Dominant colors: {p.primary_color} and {p.secondary_color}.\n"
-        f"{artist.style_directive}\n"
+        f"You should use the following artist style directive ensuring that line art is consistent, and keeping to the artist's style: {artist.style_directive}\n"
         f"Clean background, portrait orientation.\n"
         f"Do not include any text or decorative elements."
     )
@@ -158,13 +158,13 @@ def build_headshot_pencil_prompt(creature: CreatureCard) -> str:
     c = creature.classification
 
     return (
-        f"Detailed pencil sketch of a {c.variant} {c.sub_type}, "
+        f"Detailed pencil line art sketch of a {c.variant} {c.sub_type}, "
         f"a {c.species} creature.\n"
         f"Bust framing showing head and upper body only.\n"
-        f"Same character as the reference — maintain exact features, "
+        f"Same character as the reference — maintain EXACT features, "
         f"markings, and proportions.\n"
         f"Black and white pencil drawing, clean line art with "
         f"cross-hatching for shading.\n"
-        f"No color, no background, white paper.\n"
-        f"Do not include any text or decorative elements."
+        f"No color, no background, the image should only show thehead sketch, and it should look like a rough pencil sketch. On a white background\n"
+        f"Do NOT include any text, decorative elements, borders, or any other image artifacts other than the pencil sketch itself."
     )

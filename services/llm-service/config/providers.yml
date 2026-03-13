@@ -21,7 +21,7 @@ providers:
     fallback: openai
     providers:
       gemini:
-        model: imagen-3.0-generate-002
+        model: imagen-4.0-generate-001
         timeout: 60
       openai:
         model: dall-e-3

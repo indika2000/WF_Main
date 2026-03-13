@@ -6,7 +6,7 @@ image_generation_jobs collection and processes jobs using the LLM service
 """
 
 import asyncio
-import base64
+import base64  # still needed for decoding the LLM response
 import logging
 from typing import Any
 
@@ -14,9 +14,7 @@ import httpx
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.config import settings
-from app.services.artist_loader import get_artist_registry
 from app.services.image_jobs import claim_next_job, complete_job, fail_job
-from app.services.prompt_builder import NEGATIVE_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -75,34 +73,32 @@ async def _generate_image_via_llm(
     prompt: str,
     aspect_ratio: str,
     artist_id: str,
-    subject_ref_image_bytes: bytes | None = None,
 ) -> bytes:
-    """Call the LLM service to generate an image. Returns raw PNG bytes."""
-    registry = get_artist_registry()
-    artist = registry.get(artist_id)
+    """Call the LLM service to generate an image. Returns raw PNG bytes.
 
+    Note: style_reference_images and subject_reference_images are NOT sent —
+    these trigger the Imagen edit_image API which requires Vertex AI auth,
+    not the standard google-genai client. Style is conveyed via the text
+    prompt's style_directive instead.
+    """
     config: dict[str, Any] = {
         "provider": "gemini",
         "n": 1,
         "aspect_ratio": aspect_ratio,
-        "negative_prompt": NEGATIVE_PROMPT,
-        "safety_filter_level": "BLOCK_ONLY_HIGH",
         "person_generation": "DONT_ALLOW",
     }
 
-    # Add style reference images if artist has them loaded
-    if artist and artist.reference_image_bytes:
-        config["style_reference_images"] = [
-            base64.b64encode(b).decode("utf-8")
-            for b in artist.reference_image_bytes
-        ]
-        config["style_description"] = artist.style_directive
-
-    # Add subject reference for headshots (card image as reference)
-    if subject_ref_image_bytes:
-        config["subject_reference_images"] = [
-            base64.b64encode(subject_ref_image_bytes).decode("utf-8")
-        ]
+    # Log full details of what we're sending
+    logger.info(
+        "=== LLM IMAGE REQUEST ===\n"
+        "  Artist: %s\n"
+        "  Aspect ratio: %s\n"
+        "  Prompt:\n%s\n"
+        "=========================",
+        artist_id,
+        aspect_ratio,
+        prompt,
+    )
 
     async with httpx.AsyncClient(timeout=120.0) as client:
         response = await client.post(
@@ -115,6 +111,17 @@ async def _generate_image_via_llm(
     data = response.json()
     if not data.get("success") or not data.get("data", {}).get("images"):
         raise RuntimeError(f"LLM image generation failed: {data}")
+
+    logger.info(
+        "=== LLM IMAGE RESPONSE ===\n"
+        "  Success: %s\n"
+        "  Images returned: %d\n"
+        "  Provider: %s\n"
+        "==========================",
+        data.get("success"),
+        len(data.get("data", {}).get("images", [])),
+        data.get("data", {}).get("provider", "unknown"),
+    )
 
     image_b64 = data["data"]["images"][0]["data"]
     return base64.b64decode(image_b64)
@@ -145,17 +152,6 @@ async def _store_image(
     return data["data"]["id"]
 
 
-async def _fetch_image_bytes(image_id: str) -> bytes:
-    """Fetch image bytes from the image service (for subject reference)."""
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.get(
-            f"{settings.image_service_url}/images/{image_id}/file",
-            headers={"X-Api-Key": settings.internal_api_key},
-        )
-        response.raise_for_status()
-    return response.content
-
-
 async def _process_job(db: AsyncIOMotorDatabase, job: dict[str, Any]) -> None:
     """Process a single image generation job."""
     creature_id = job["creature_id"]
@@ -170,24 +166,11 @@ async def _process_job(db: AsyncIOMotorDatabase, job: dict[str, Any]) -> None:
         job["attempts"],
     )
 
-    # For headshots, fetch the card image as subject reference
-    subject_ref_bytes = None
-    if image_type != "card" and job.get("reference_image_id"):
-        try:
-            subject_ref_bytes = await _fetch_image_bytes(job["reference_image_id"])
-        except Exception as e:
-            logger.warning(
-                "Failed to fetch reference image %s: %s",
-                job["reference_image_id"],
-                e,
-            )
-
     # Generate the image
     image_bytes = await _generate_image_via_llm(
         prompt=job["prompt"],
         aspect_ratio=job.get("aspect_ratio", "1:1"),
         artist_id=job["artist_id"],
-        subject_ref_image_bytes=subject_ref_bytes,
     )
 
     # Store the image

@@ -60,6 +60,15 @@ async def generate_image(
     current_user: dict = Depends(get_current_user),
 ):
     """Image generation."""
+    style_refs = request.config.style_reference_images or []
+    subject_refs = request.config.subject_reference_images or []
+    logger.info(
+        "Image request received — provider: %s, style_refs: %d, subject_refs: %d, aspect_ratio: %s",
+        request.config.provider,
+        len(style_refs),
+        len(subject_refs),
+        request.config.aspect_ratio,
+    )
     try:
         result = await generation_service.generate_image(
             prompt=request.prompt,

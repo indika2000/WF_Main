@@ -35,6 +35,10 @@ class ImageGenConfig(BaseModel):
     negative_prompt: str | None = None
     safety_filter_level: str | None = None
     person_generation: str | None = None
+    # Reference images (base64-encoded strings)
+    style_reference_images: list[str] | None = None
+    style_description: str | None = None
+    subject_reference_images: list[str] | None = None
 
 
 class ImageGenRequest(BaseModel):

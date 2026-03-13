@@ -100,7 +100,7 @@ class GeminiImageProvider:
     """Image generation using Google Imagen API.
 
     Supports two modes:
-    1. Standard text-to-image via generate_images() (imagen-3.0-generate-002)
+    1. Standard text-to-image via generate_images() (imagen-4.0-generate-001)
     2. Style/subject-referenced generation via edit_image() (imagen-3.0-capability-001)
     """
 
@@ -109,7 +109,7 @@ class GeminiImageProvider:
     # Model used for style/subject reference (edit_image API)
     STYLE_REF_MODEL = "imagen-3.0-capability-001"
 
-    def __init__(self, api_key: str, model: str = "imagen-3.0-generate-002", **kwargs):
+    def __init__(self, api_key: str, model: str = "imagen-4.0-generate-001", **kwargs):
         self.model = model
         self.client = genai.Client(api_key=api_key)
         self.timeout = kwargs.get("timeout", 60)
@@ -135,6 +135,25 @@ class GeminiImageProvider:
         """
         style_refs = kwargs.get("style_reference_images", [])
         subject_refs = kwargs.get("subject_reference_images", [])
+
+        logger.info(
+            "=== GEMINI IMAGE GENERATE ===\n"
+            "  Model: %s\n"
+            "  Style refs: %d\n"
+            "  Subject refs: %d\n"
+            "  Aspect ratio: %s\n"
+            "  Negative prompt: %s\n"
+            "  Using edit_image API: %s\n"
+            "  Prompt:\n%s\n"
+            "=============================",
+            self.model,
+            len(style_refs),
+            len(subject_refs),
+            kwargs.get("aspect_ratio", "default"),
+            kwargs.get("negative_prompt", "none"),
+            bool(style_refs or subject_refs),
+            prompt,
+        )
 
         # Use edit_image API when reference images are provided
         if style_refs or subject_refs:
@@ -189,25 +208,27 @@ class GeminiImageProvider:
         """Generate images using edit_image API with style/subject references."""
         reference_images = []
 
-        # Build style reference images
-        style_ref_bytes = kwargs.get("style_reference_images", [])
+        # Build style reference images — decode base64 strings to bytes
+        style_ref_data = kwargs.get("style_reference_images", [])
         style_desc = kwargs.get("style_description", "")
-        for ref_bytes in style_ref_bytes:
+        for ref_data in style_ref_data:
+            raw_bytes = base64.b64decode(ref_data) if isinstance(ref_data, str) else ref_data
             reference_images.append(
                 types.StyleReferenceImage(
-                    reference_image=types.Image(image_bytes=ref_bytes),
+                    reference_image=types.Image(image_bytes=raw_bytes),
                     config=types.StyleReferenceConfig(
                         style_description=style_desc,
                     ),
                 )
             )
 
-        # Build subject reference images
-        subject_ref_bytes = kwargs.get("subject_reference_images", [])
-        for ref_bytes in subject_ref_bytes:
+        # Build subject reference images — decode base64 strings to bytes
+        subject_ref_data = kwargs.get("subject_reference_images", [])
+        for ref_data in subject_ref_data:
+            raw_bytes = base64.b64decode(ref_data) if isinstance(ref_data, str) else ref_data
             reference_images.append(
                 types.SubjectReferenceImage(
-                    reference_image=types.Image(image_bytes=ref_bytes),
+                    reference_image=types.Image(image_bytes=raw_bytes),
                     config=types.SubjectReferenceConfig(
                         subject_type="SUBJECT_TYPE_DEFAULT",
                     ),
@@ -220,9 +241,9 @@ class GeminiImageProvider:
         )
 
         # Determine edit mode based on reference type
-        if style_ref_bytes and not subject_ref_bytes:
+        if style_ref_data and not subject_ref_data:
             edit_config.edit_mode = "STYLE_REFERENCE"
-        elif subject_ref_bytes and not style_ref_bytes:
+        elif subject_ref_data and not style_ref_data:
             edit_config.edit_mode = "SUBJECT_REFERENCE"
 
         negative_prompt = kwargs.get("negative_prompt")
@@ -236,6 +257,22 @@ class GeminiImageProvider:
         person_gen = kwargs.get("person_generation")
         if person_gen:
             edit_config.person_generation = person_gen
+
+        logger.info(
+            "=== GEMINI EDIT_IMAGE CALL ===\n"
+            "  Model: %s\n"
+            "  Edit mode: %s\n"
+            "  Style refs: %d (desc: %s)\n"
+            "  Subject refs: %d\n"
+            "  Negative prompt: %s\n"
+            "==============================",
+            self.STYLE_REF_MODEL,
+            edit_config.edit_mode or "auto",
+            len(style_ref_data),
+            style_desc[:100] if style_desc else "none",
+            len(subject_ref_data),
+            negative_prompt or "none",
+        )
 
         response = await self.client.aio.models.edit_image(
             model=self.STYLE_REF_MODEL,
