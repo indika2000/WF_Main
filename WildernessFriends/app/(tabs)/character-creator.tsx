@@ -16,13 +16,21 @@ import * as tokenManager from "../../services/tokenManager";
 import CreationCameraModal from "../../components/CreationCameraModal";
 import PackOpeningVideo from "../../components/PackOpeningVideo";
 import CharacterReveal from "../../components/CharacterReveal";
+import CreatureSearchAnimation from "../../components/CreatureSearchAnimation";
+import CreatureAlmostFoundAnimation from "../../components/CreatureAlmostFoundAnimation";
 import type {
   GenerateCreatureResponse,
   UsageCheckResponse,
   CollectionResponse,
 } from "../../types";
 
-type CreatorState = "idle" | "scanning" | "generating" | "reveal";
+type CreatorState =
+  | "idle"
+  | "scanning"
+  | "searching"
+  | "generating"
+  | "waiting_images"
+  | "reveal";
 
 const RARITY_COLORS: Record<string, string> = {
   COMMON: "#9CA3AF",
@@ -46,8 +54,15 @@ export default function CharacterCreatorScreen() {
     useState<GenerateCreatureResponse | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [rescanMessage, setRescanMessage] = useState<string | null>(null);
-  const [cardImageId, setCardImageId] = useState<string | null>(null);
+
+  // All three image IDs tracked via SSE
+  const [imageIds, setImageIds] = useState<Record<string, string>>({});
   const sseAbortRef = useRef<{ abort: () => void } | null>(null);
+
+  // Card image is the gate — it's the only one needed for the flip reveal.
+  // Headshot images arrive in the background and will be available for the
+  // collection detail modal once they land in imageIds.
+  const allImagesReady = !!imageIds.card;
 
   const fetchStats = useCallback(async () => {
     if (!apiReady || !user) return;
@@ -83,69 +98,52 @@ export default function CharacterCreatorScreen() {
     setState("idle");
   };
 
+  // Scan detected: start API call immediately, transition to "searching" animation
   const handleCodeScanned = async (codeType: string, rawValue: string) => {
-    setState("generating");
+    setState("searching");
     setVideoFinished(false);
     setCreatureResult(null);
     setGenerationError(null);
-    setCardImageId(null);
+    setImageIds({});
 
     try {
       const result = await characterService.generateCreature(codeType, rawValue);
       console.log("[CharacterCreator] API result:", JSON.stringify(result, null, 2));
-      console.log("[CharacterCreator] creature field:", result?.creature ? "EXISTS" : "MISSING", typeof result?.creature);
       setCreatureResult(result);
     } catch (err: any) {
       console.log("[CharacterCreator] API error:", JSON.stringify(err, null, 2));
       const message =
         err?.message || err?.response?.data?.message || "Generation failed";
       setGenerationError(message);
-      // Don't set state to idle here — let the video finish first
     }
   };
+
+  // 5s search animation complete → start video
+  const handleSearchAnimationComplete = useCallback(() => {
+    setState("generating");
+  }, []);
 
   const handleVideoEnd = () => {
     setVideoFinished(true);
   };
 
-  // Transition after both video ends and API completes (success or failure)
+  // Start SSE as soon as creatureResult has a creature_id
   useEffect(() => {
-    if (state !== "generating" || !videoFinished) return;
-    // Wait for API to finish (either success or error)
-    if (!creatureResult && !generationError) return;
-
-    if (creatureResult?.creature) {
-      // Check if this was a re-scan (not new discovery, not claimed variant)
-      if (!creatureResult.is_new_discovery && !creatureResult.is_claimed_variant) {
-        // Re-scan of owned barcode — skip reveal, go back to idle
-        setError(null);
-        setState("idle");
-        // Show a brief message that this creature is already owned
-        setRescanMessage(creatureResult.creature.presentation?.name || "This creature");
-      } else {
-        setState("reveal");
-      }
-    } else {
-      // API failed or creature is missing in response
-      setError(generationError || "Creature data missing in response");
-      setState("idle");
-    }
-  }, [state, videoFinished, creatureResult, generationError]);
-
-  // Subscribe to SSE for image readiness when entering reveal state
-  useEffect(() => {
-    if (state !== "reveal" || !creatureResult?.creature) return;
+    if (!creatureResult?.creature) return;
 
     const creatureId = creatureResult.creature.identity.creature_id;
 
-    // Check if creature already has a card image from the API response
-    const existingCardImage = creatureResult.creature.images?.card;
-    if (existingCardImage) {
-      setCardImageId(existingCardImage);
-      return;
+    // Seed any images already present in the API response
+    const existing = creatureResult.creature.images;
+    const initial: Record<string, string> = {};
+    if (existing?.card) initial.card = existing.card;
+    if (existing?.headshot_color) initial.headshot_color = existing.headshot_color;
+    if (existing?.headshot_pencil) initial.headshot_pencil = existing.headshot_pencil;
+    if (Object.keys(initial).length > 0) {
+      setImageIds((prev) => ({ ...prev, ...initial }));
     }
 
-    // Subscribe to SSE for real-time image updates
+    // Subscribe to SSE for remaining images
     (async () => {
       const token = await tokenManager.getToken();
       if (!token) return;
@@ -153,9 +151,7 @@ export default function CharacterCreatorScreen() {
       const sub = characterService.subscribeToImageStream(creatureId, token, {
         onImageReady: (imageType, imageId) => {
           console.log("[SSE] Image ready:", imageType, imageId);
-          if (imageType === "card") {
-            setCardImageId(imageId);
-          }
+          setImageIds((prev) => ({ ...prev, [imageType]: imageId }));
         },
         onComplete: () => {
           console.log("[SSE] All images complete");
@@ -171,7 +167,77 @@ export default function CharacterCreatorScreen() {
       sseAbortRef.current?.abort();
       sseAbortRef.current = null;
     };
-  }, [state, creatureResult]);
+  }, [creatureResult?.creature?.identity?.creature_id]);
+
+  // Transition: generating → waiting_images or reveal (once video done + API done)
+  useEffect(() => {
+    if (state !== "generating" || !videoFinished) return;
+    if (!creatureResult && !generationError) return;
+
+    if (creatureResult?.creature) {
+      // Re-scan of already-owned barcode — no new content, skip reveal
+      if (!creatureResult.is_new_discovery && !creatureResult.is_claimed_variant) {
+        setRescanMessage(creatureResult.creature.presentation?.name || "This creature");
+        setState("idle");
+      } else if (allImagesReady) {
+        setState("reveal");
+      } else {
+        setState("waiting_images");
+      }
+    } else {
+      setError(generationError || "Creature data missing in response");
+      setState("idle");
+    }
+  }, [state, videoFinished, creatureResult, generationError, allImagesReady]);
+
+  // Transition: waiting_images → reveal when card image arrives (SSE or poll)
+  useEffect(() => {
+    if (state !== "waiting_images") return;
+
+    if (allImagesReady) {
+      setState("reveal");
+      return;
+    }
+
+    const creatureId = creatureResult?.creature?.identity?.creature_id;
+    if (!creatureId) {
+      setState("reveal");
+      return;
+    }
+
+    // Poll the image status endpoint as a reliable fallback for SSE.
+    // SSE fires first if it's working; polling catches it if SSE drops or is slow.
+    const poll = async () => {
+      try {
+        const status = await characterService.getImageStatus(creatureId);
+        for (const job of status.jobs) {
+          if (job.status === "completed" && job.result_image_id) {
+            setImageIds((prev) => ({
+              ...prev,
+              [job.image_type]: job.result_image_id!,
+            }));
+          }
+        }
+      } catch (e) {
+        console.warn("[CharacterCreator] Image status poll failed:", e);
+      }
+    };
+
+    poll(); // Check immediately on entering this state
+    const interval = setInterval(poll, 5000); // Then every 5s
+
+    // Hard ceiling: proceed regardless after 90s so user is never permanently stuck
+    const timeout = setTimeout(() => {
+      console.warn("[CharacterCreator] Image wait timeout — proceeding to reveal");
+      clearInterval(interval);
+      setState("reveal");
+    }, 90000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [state, allImagesReady, creatureResult]);
 
   const handleRevealDismiss = () => {
     sseAbortRef.current?.abort();
@@ -180,7 +246,7 @@ export default function CharacterCreatorScreen() {
     setCreatureResult(null);
     setVideoFinished(false);
     setGenerationError(null);
-    setCardImageId(null);
+    setImageIds({});
     fetchStats();
   };
 
@@ -190,7 +256,6 @@ export default function CharacterCreatorScreen() {
   const limit = usage ? usage.limit : 0;
   const usagePercent = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
 
-  // Compute rarity distribution from collection
   const rarityDistribution = computeRarityDistribution(collection);
   const totalCreatures = collection?.total || 0;
 
@@ -254,8 +319,6 @@ export default function CharacterCreatorScreen() {
                   {totalCreatures}
                 </Text>
               </View>
-
-              {/* Rarity Distribution */}
               {rarityDistribution.length > 0 && (
                 <View className="mt-2">
                   <Text className="text-text-muted text-xs mb-2">
@@ -343,21 +406,30 @@ export default function CharacterCreatorScreen() {
         onCodeScanned={handleCodeScanned}
       />
 
-      {/* Pack Opening Video */}
+      {/* Phase 1: Search animation (5s, starts API call in background) */}
+      <CreatureSearchAnimation
+        visible={state === "searching"}
+        onComplete={handleSearchAnimationComplete}
+      />
+
+      {/* Phase 2: Pack opening video */}
       <PackOpeningVideo
         visible={state === "generating"}
         onVideoEnd={handleVideoEnd}
-        showLoadingIndicator={videoFinished && !creatureResult && !generationError}
+        showLoadingIndicator={false}
       />
 
-      {/* Character Reveal */}
-      {state === "reveal" && creatureResult && (
+      {/* Phase 3: Waiting for images (SSE) — only if video done but images not ready */}
+      <CreatureAlmostFoundAnimation visible={state === "waiting_images"} />
+
+      {/* Phase 4: Card flip reveal */}
+      {state === "reveal" && creatureResult?.creature && (
         <CharacterReveal
           creature={creatureResult.creature}
           isNewDiscovery={creatureResult.is_new_discovery}
           isClaimedVariant={creatureResult.is_claimed_variant}
           onDismiss={handleRevealDismiss}
-          cardImageId={cardImageId}
+          cardImageId={imageIds.card || null}
         />
       )}
     </SafeAreaView>

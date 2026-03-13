@@ -1,22 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   ImageBackground,
   StyleSheet,
-  ScrollView,
   Dimensions,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
+import LayeredFlipCard from "./LayeredFlipCard";
+import CardShimmer, { ShimmerRarity } from "./CardShimmer";
 import type { CreatureCard } from "../types";
 import { getImageFileUrl } from "../services/images";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const IMAGE_WIDTH = SCREEN_WIDTH * 0.75;
-const IMAGE_HEIGHT = IMAGE_WIDTH * 1.2; // Portrait aspect ratio for full character
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+// Card dimensions — same ratio as dev-tools card-layer-test
+const CARD_W = Math.min(SCREEN_WIDTH * 0.72, 290);
+const CARD_H = CARD_W * 1.5;
 
 const RARITY_COLORS: Record<string, string> = {
   COMMON: "#9CA3AF",
@@ -26,6 +33,45 @@ const RARITY_COLORS: Record<string, string> = {
   LEGENDARY: "#FBBF24",
 };
 
+// Maps rarity → card layer assets + shimmer tier
+const RARITY_ASSETS: Record<
+  string,
+  { base: any; border: any; shimmer: ShimmerRarity; lightText: boolean }
+> = {
+  COMMON: {
+    base: require("../assets/images/card_designs/card_backing-normal.png"),
+    border: require("../assets/images/card_designs/border_1_transparent.png"),
+    shimmer: "common",
+    lightText: false,
+  },
+  UNCOMMON: {
+    base: require("../assets/images/card_designs/card_backing_uncommon.png"),
+    border: require("../assets/images/card_designs/border_2_transparent.png"),
+    shimmer: "uncommon",
+    lightText: false,
+  },
+  RARE: {
+    base: require("../assets/images/card_designs/card_backing_rare.png"),
+    border: require("../assets/images/card_designs/border_3_transparent.png"),
+    shimmer: "rare",
+    lightText: true,
+  },
+  EPIC: {
+    base: require("../assets/images/card_designs/card_backing_rare.png"),
+    border: require("../assets/images/card_designs/border_4_transparent.png"),
+    shimmer: "epic",
+    lightText: true,
+  },
+  LEGENDARY: {
+    base: require("../assets/images/card_designs/card_backing_rare.png"),
+    border: require("../assets/images/card_designs/border_4_transparent.png"),
+    shimmer: "legendary",
+    lightText: true,
+  },
+};
+
+const FALLBACK_ASSETS = RARITY_ASSETS.COMMON;
+
 interface CharacterRevealProps {
   creature: CreatureCard;
   isNewDiscovery: boolean;
@@ -34,49 +80,11 @@ interface CharacterRevealProps {
   cardImageId?: string | null;
 }
 
-/**
- * Simulates a gradient fade using layered semi-transparent views.
- * Each strip has increasing opacity toward the edge.
- */
-function FadeEdge({
-  side,
-  color = "rgba(200,190,175,",
-}: {
-  side: "top" | "bottom" | "left" | "right";
-  color?: string;
-}) {
-  const STRIPS = 5;
-  const TOTAL_SIZE = 30;
-  const stripSize = TOTAL_SIZE / STRIPS;
-  const isHorizontal = side === "left" || side === "right";
-
+function StatPill({ label, value }: { label: string; value: number }) {
   return (
-    <View
-      style={[
-        styles.fadeEdge,
-        isHorizontal
-          ? { width: TOTAL_SIZE, top: 0, bottom: 0, [side]: 0 }
-          : { height: TOTAL_SIZE, left: 0, right: 0, [side]: 0 },
-        isHorizontal ? { flexDirection: "row" } : { flexDirection: "column" },
-      ]}
-      pointerEvents="none"
-    >
-      {Array.from({ length: STRIPS }).map((_, i) => {
-        // Opacity increases toward the edge
-        const fromEdge = side === "right" || side === "bottom" ? i : STRIPS - 1 - i;
-        const opacity = (fromEdge + 1) / STRIPS * 0.85;
-        return (
-          <View
-            key={i}
-            style={[
-              isHorizontal
-                ? { width: stripSize, height: "100%" as any }
-                : { height: stripSize, width: "100%" as any },
-              { backgroundColor: `${color}${opacity})` },
-            ]}
-          />
-        );
-      })}
+    <View style={styles.statPill}>
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={styles.statValue}>{value}</Text>
     </View>
   );
 }
@@ -88,17 +96,49 @@ export default function CharacterReveal({
   onDismiss,
   cardImageId,
 }: CharacterRevealProps) {
-  const [imageLoading, setImageLoading] = useState(!!cardImageId);
-  const [imageError, setImageError] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+
+  // Info panel slides up after flip completes
+  const infoTranslate = useSharedValue(200);
+  const infoOpacity = useSharedValue(0);
+  // Hint text fades out on flip
+  const hintOpacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (!isFlipped) return;
+    // Fade out the hint
+    hintOpacity.value = withTiming(0, { duration: 400, easing: Easing.out(Easing.ease) });
+    // After flip duration (800ms), slide up info panel
+    const timer = setTimeout(() => {
+      setShowInfo(true);
+      infoTranslate.value = withTiming(0, {
+        duration: 450,
+        easing: Easing.out(Easing.cubic),
+      });
+      infoOpacity.value = withTiming(1, { duration: 400 });
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [isFlipped]);
+
+  const infoPanelStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: infoTranslate.value }],
+    opacity: infoOpacity.value,
+  }));
+
+  const hintStyle = useAnimatedStyle(() => ({
+    opacity: hintOpacity.value,
+  }));
 
   if (!creature) return null;
 
-  const rarityColor = RARITY_COLORS[creature.classification.rarity] || "#9CA3AF";
+  const rarity = creature.classification.rarity;
+  const assets = RARITY_ASSETS[rarity] ?? FALLBACK_ASSETS;
+  const rarityColor = RARITY_COLORS[rarity] || "#9CA3AF";
 
-  // Use generated image if available, otherwise placeholder
-  const hasGeneratedImage = !!cardImageId && !imageError;
-  const imageSource = hasGeneratedImage
-    ? { uri: getImageFileUrl(cardImageId!) }
+  // Character image: generated card art, or placeholder while loading
+  const characterImage = cardImageId
+    ? { uri: getImageFileUrl(cardImageId) }
     : require("../assets/images/card_designs/test_painted_character.png");
 
   return (
@@ -108,67 +148,72 @@ export default function CharacterReveal({
         style={styles.background}
         resizeMode="cover"
       >
-        <SafeAreaView style={styles.content}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Character Image with soft edge fade */}
-            <View style={styles.imageContainer}>
-              {/* Loading overlay while image fetches */}
-              {imageLoading && (
-                <View style={styles.imageLoadingOverlay}>
-                  <ActivityIndicator size="large" color="#F5E6C8" />
-                  <Text style={styles.imageLoadingText}>Painting...</Text>
-                </View>
-              )}
-              <Image
-                source={imageSource}
-                style={styles.characterImage}
-                resizeMode="contain"
-                onLoadEnd={() => setImageLoading(false)}
-                onError={() => {
-                  setImageError(true);
-                  setImageLoading(false);
-                }}
-              />
-              {/* Soft gradient-like edge fades */}
-              <FadeEdge side="top" />
-              <FadeEdge side="bottom" />
-              <FadeEdge side="left" />
-              <FadeEdge side="right" />
-            </View>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.content}>
 
-            {/* Text Panel */}
-            <ImageBackground
-              source={require("../assets/images/character_creator/Character_Creator_Text_Panel.png")}
-              style={styles.textPanel}
-              resizeMode="stretch"
+            {/* Card + shimmer, tap to flip */}
+            <TouchableOpacity
+              activeOpacity={0.92}
+              onPress={() => !isFlipped && setIsFlipped(true)}
+              style={styles.cardWrapper}
             >
-              <View style={styles.textPanelContent}>
-                {/* Rarity Badge */}
+              <View style={{ width: CARD_W, height: CARD_H }}>
+                <LayeredFlipCard
+                  isFlipped={isFlipped}
+                  baseImage={assets.base}
+                  characterImage={characterImage}
+                  borderImage={assets.border}
+                  backImage={require("../assets/images/card_designs/card-back.png")}
+                  lightText={assets.lightText}
+                  width={CARD_W}
+                  height={CARD_H}
+                  duration={800}
+                />
+                {/* Shimmer sits on top of the card, clips to card bounds */}
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: CARD_W,
+                    height: CARD_H,
+                  }}
+                  pointerEvents="none"
+                >
+                  <CardShimmer rarity={assets.shimmer} width={CARD_W} height={CARD_H} />
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            {/* Tap hint — fades out after flip */}
+            <Animated.Text style={[styles.hintText, hintStyle]}>
+              Tap to reveal
+            </Animated.Text>
+
+            {/* Info panel — slides up after flip */}
+            {showInfo && (
+              <Animated.View style={[styles.infoPanel, infoPanelStyle]}>
+                {/* Rarity badge */}
                 <View
                   style={[
                     styles.rarityBadge,
-                    { backgroundColor: rarityColor + "30" },
+                    { backgroundColor: rarityColor + "28" },
                   ]}
                 >
                   <Text style={[styles.rarityText, { color: rarityColor }]}>
-                    {creature.classification.rarity}
+                    {rarity}
                   </Text>
                 </View>
 
-                {/* Name */}
+                {/* Name + title */}
                 <Text style={styles.creatureName}>
                   {creature.presentation.name}
                 </Text>
-
-                {/* Title */}
                 <Text style={styles.creatureTitle}>
                   {creature.presentation.title}
                 </Text>
 
-                {/* Stats Row */}
+                {/* Stats */}
                 <View style={styles.statsRow}>
                   <StatPill label="POW" value={creature.attributes.power} />
                   <StatPill label="DEF" value={creature.attributes.defense} />
@@ -179,52 +224,62 @@ export default function CharacterReveal({
                   <StatPill label="LCK" value={creature.attributes.luck} />
                 </View>
 
-                {/* Status Badges */}
-                <View style={styles.badgesRow}>
-                  {isNewDiscovery && (
-                    <View style={[styles.statusBadge, { backgroundColor: "rgba(123,143,107,0.3)" }]}>
-                      <Text style={[styles.statusBadgeText, { color: "#9AAD8A" }]}>
-                        New Discovery
-                      </Text>
-                    </View>
-                  )}
-                  {isClaimedVariant && (
-                    <View style={[styles.statusBadge, { backgroundColor: "rgba(251,191,36,0.2)" }]}>
-                      <Text style={[styles.statusBadgeText, { color: "#FBBF24" }]}>
-                        Claimed Variant
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                {/* Status badges */}
+                {(isNewDiscovery || isClaimedVariant) && (
+                  <View style={styles.badgesRow}>
+                    {isNewDiscovery && (
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          { backgroundColor: "rgba(123,143,107,0.3)" },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusBadgeText,
+                            { color: "#9AAD8A" },
+                          ]}
+                        >
+                          New Discovery
+                        </Text>
+                      </View>
+                    )}
+                    {isClaimedVariant && (
+                      <View
+                        style={[
+                          styles.statusBadge,
+                          { backgroundColor: "rgba(251,191,36,0.2)" },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.statusBadgeText,
+                            { color: "#FBBF24" },
+                          ]}
+                        >
+                          Claimed Variant
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
 
-                {/* Classification Info */}
-                <View style={styles.classificationRow}>
-                  <Text style={styles.classificationText}>
-                    {creature.classification.biome.replace(/_/g, " ")} · {creature.classification.family.replace(/_/g, " ")}
-                  </Text>
-                  <Text style={styles.classificationText}>
-                    {creature.classification.element.replace(/_/g, " ")} · {creature.classification.size}
-                  </Text>
-                </View>
+                {/* Biome / element line */}
+                <Text style={styles.classificationText}>
+                  {creature.classification.biome.replace(/_/g, " ")}
+                  {" · "}
+                  {creature.classification.element.replace(/_/g, " ")}
+                </Text>
 
-                {/* Dismiss Button */}
+                {/* Add to Collection button */}
                 <TouchableOpacity style={styles.dismissButton} onPress={onDismiss}>
                   <Text style={styles.dismissButtonText}>Add to Collection</Text>
                 </TouchableOpacity>
-              </View>
-            </ImageBackground>
-          </ScrollView>
+              </Animated.View>
+            )}
+          </View>
         </SafeAreaView>
       </ImageBackground>
-    </View>
-  );
-}
-
-function StatPill({ label, value }: { label: string; value: number }) {
-  return (
-    <View style={styles.statPill}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
     </View>
   );
 }
@@ -237,108 +292,98 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
   },
-  content: {
+  safeArea: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
+  content: {
+    flex: 1,
     alignItems: "center",
-    paddingVertical: 20,
-  },
-  imageContainer: {
-    width: IMAGE_WIDTH,
-    height: IMAGE_HEIGHT,
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: -10,
-    zIndex: 1,
-  },
-  characterImage: {
-    width: "100%",
-    height: "100%",
-  },
-  fadeEdge: {
-    position: "absolute",
-    zIndex: 2,
-  },
-  imageLoadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 3,
-    backgroundColor: "rgba(30,30,30,0.6)",
     justifyContent: "center",
-    alignItems: "center",
+    paddingBottom: 24,
   },
-  imageLoadingText: {
-    color: "#F5E6C8",
+  cardWrapper: {
+    // Shadow for the card
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  hintText: {
+    color: "rgba(245,230,200,0.7)",
     fontSize: 14,
     fontStyle: "italic",
-    marginTop: 8,
+    marginTop: 14,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  textPanel: {
-    width: SCREEN_WIDTH * 0.9,
-    minHeight: 320,
-    paddingTop: 30,
-  },
-  textPanelContent: {
-    padding: 24,
+  infoPanel: {
+    width: SCREEN_WIDTH * 0.88,
+    backgroundColor: "rgba(15,26,20,0.88)",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(196,184,154,0.25)",
+    paddingVertical: 18,
+    paddingHorizontal: 20,
     alignItems: "center",
+    marginTop: 14,
   },
   rarityBadge: {
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 20,
     marginBottom: 8,
   },
   rarityText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "800",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   creatureName: {
     color: "#F5E6C8",
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   creatureTitle: {
     color: "#C4B89A",
-    fontSize: 14,
+    fontSize: 13,
     fontStyle: "italic",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 14,
   },
   statsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 6,
+    gap: 5,
     marginBottom: 12,
   },
   statPill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.1)",
-    paddingHorizontal: 8,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 10,
-    gap: 4,
+    gap: 3,
   },
   statLabel: {
     color: "#C4B89A",
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "600",
   },
   statValue: {
     color: "#F5E6C8",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
   },
   badgesRow: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -346,22 +391,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
-  },
-  classificationRow: {
-    alignItems: "center",
-    marginBottom: 16,
   },
   classificationText: {
     color: "#C4B89A",
     fontSize: 12,
     textTransform: "capitalize",
+    marginBottom: 16,
   },
   dismissButton: {
     backgroundColor: "#7B8F6B",
-    paddingHorizontal: 32,
-    paddingVertical: 14,
+    paddingHorizontal: 36,
+    paddingVertical: 13,
     borderRadius: 12,
     minWidth: 200,
     alignItems: "center",

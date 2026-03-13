@@ -133,7 +133,15 @@ export function subscribeToImageStream(
             // End of event
             try {
               const parsed = JSON.parse(currentData);
-              if (currentEvent === "image_ready" || parsed.event === "image_ready") {
+              if (currentEvent === "status" || parsed.event === "status") {
+                // Seed any images that already completed before we connected
+                const jobs: any[] = parsed.jobs || [];
+                for (const job of jobs) {
+                  if (job.status === "completed" && job.result_image_id) {
+                    callbacks.onImageReady?.(job.image_type, job.result_image_id);
+                  }
+                }
+              } else if (currentEvent === "image_ready" || parsed.event === "image_ready") {
                 callbacks.onImageReady?.(parsed.image_type, parsed.image_id);
               } else if (currentEvent === "complete") {
                 callbacks.onComplete?.();
